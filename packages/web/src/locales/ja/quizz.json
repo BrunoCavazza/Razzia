@@ -1,0 +1,29 @@
+{
+  "addAnswerPlaceholder": "回答を追加...",
+  "addQuestion": "質問を追加",
+  "answersCountSuffix": "件の回答",
+  "deleteQuestion": "質問を削除",
+  "noQuestionYet": "まだ質問がありません",
+  "question": {
+    "addMediaHint": "質問に画像、動画、音声を追加できます",
+    "config": {
+      "answerTime": "回答時間",
+      "answerTimeHint": "プレイヤーが回答できる時間",
+      "questionDisplay": "問題表示",
+      "questionDisplayHint": "回答が表示されるまでの時間",
+      "timings": "タイミング"
+    },
+    "deleteQuestion": "この質問を削除",
+    "deleteQuestionConfirm": "この質問を削除してもよろしいですか？",
+    "media": {
+      "audio": "音声",
+      "image": "画像",
+      "video": "動画"
+    },
+    "mediaUrlPlaceholder": "URLを入力...",
+    "placeholder": "質問を入力してください..."
+  },
+  "quizzSaved": "クイズを保存しました",
+  "quizzUpdated": "クイズを更新しました",
+  "titleQuizzPlaceholder": "クイズのタイトル..."
+}
