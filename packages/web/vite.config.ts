@@ -33,6 +33,7 @@ export default defineConfig({
   server: {
     port: 3000,
     host: "0.0.0.0",
+    allowedHosts: ["tombalover.playit.game"],
     proxy: {
       "/ws": {
         target: "http://localhost:3001",
