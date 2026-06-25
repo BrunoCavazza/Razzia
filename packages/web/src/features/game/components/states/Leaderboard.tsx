@@ -34,7 +34,7 @@ const StreakBadge = ({ streak }: { streak: number }) => (
         animate={{ opacity: 1, scale: 1, x: 0 }}
         exit={{ opacity: 0, scale: 0.5, x: -10 }}
         transition={{ type: "spring", stiffness: 400, damping: 20 }}
-        className="ml-2 flex items-center gap-1 rounded-full bg-amber-700 p-1"
+        className="ml-2 flex items-center gap-1 rounded-full bg-primary p-1"
       >
         <Fire className="size-7" />
       </motion.div>

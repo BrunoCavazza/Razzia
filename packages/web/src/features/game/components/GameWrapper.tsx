@@ -67,6 +67,10 @@ const GameWrapper = ({
           src={background}
           alt="background"
         />
+        <div
+          className="pointer-events-none absolute inset-0 bg-gradient-to-br from-secondary/70 via-violet-950/35 to-blue-950/55"
+          aria-hidden
+        />
       </div>
 
       <div className="z-10 flex w-full flex-1 flex-col justify-between">
