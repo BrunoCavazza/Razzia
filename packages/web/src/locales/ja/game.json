@@ -7,6 +7,9 @@
   },
   "joinInstruction": "以下でゲームに参加してください",
   "leaderboard": "リーダーボード",
+  "music": {
+    "volume": "音楽"
+  },
   "pinLabel": "PINコード",
   "playersJoined": "参加プレイヤー数: ",
   "questionPrefix": "問題 #",

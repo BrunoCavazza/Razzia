@@ -7,6 +7,9 @@
   },
   "joinInstruction": "Join the game at",
   "leaderboard": "Leaderboard",
+  "music": {
+    "volume": "Music"
+  },
   "pinLabel": "PIN Code",
   "playersJoined": "Players Joined: ",
   "questionPrefix": "Question #",

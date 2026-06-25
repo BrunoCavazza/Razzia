@@ -3,6 +3,7 @@ import type { Status } from "@razzia/common/types/game/status"
 import background from "@razzia/web/assets/background.png"
 import Button from "@razzia/web/components/Button"
 import Loader from "@razzia/web/components/Loader"
+import PresenterMusicVolume from "@razzia/web/features/game/components/PresenterMusicVolume"
 import {
   useEvent,
   useSocket,
@@ -78,35 +79,40 @@ const GameWrapper = ({
           </div>
         ) : (
           <>
-            <div className="flex w-full justify-between p-4">
-              {questionStates && (
-                <div className="flex items-center rounded-md bg-white p-2 px-4 text-lg font-bold text-black">
-                  {`${questionStates.current} / ${questionStates.total}`}
-                </div>
-              )}
+            <div className="flex w-full items-start justify-between gap-2 p-4">
+              <div className="flex items-center gap-2">
+                {questionStates && (
+                  <div className="flex items-center rounded-md bg-white p-2 px-4 text-lg font-bold text-black">
+                    {`${questionStates.current} / ${questionStates.total}`}
+                  </div>
+                )}
+                {manager && <PresenterMusicVolume />}
+              </div>
 
-              {manager && next && (
-                <Button
-                  className={clsx(
-                    "bg-white px-4 text-black hover:bg-gray-200",
-                    {
-                      "pointer-events-none": isDisabled,
-                    },
-                  )}
-                  onClick={handleNext}
-                >
-                  {t(next)}
-                </Button>
-              )}
+              <div className="flex items-center gap-2">
+                {manager && next && (
+                  <Button
+                    className={clsx(
+                      "bg-white px-4 text-black hover:bg-gray-200",
+                      {
+                        "pointer-events-none": isDisabled,
+                      },
+                    )}
+                    onClick={handleNext}
+                  >
+                    {t(next)}
+                  </Button>
+                )}
 
-              {manager && onBack && (
-                <Button
-                  onClick={onBack}
-                  className="bg-white px-4 text-black hover:bg-gray-200"
-                >
-                  {t("common:exit")}
-                </Button>
-              )}
+                {manager && onBack && (
+                  <Button
+                    onClick={onBack}
+                    className="bg-white px-4 text-black hover:bg-gray-200"
+                  >
+                    {t("common:exit")}
+                  </Button>
+                )}
+              </div>
             </div>
 
             {children}

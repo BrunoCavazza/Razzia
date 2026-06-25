@@ -15,7 +15,12 @@ Write-Host "=== Razzia Hosting ===" -ForegroundColor Cyan
 Write-Host ""
 
 # 1. playit
-Write-Host "[1/3] Iniciando playit..." -ForegroundColor Yellow
+Write-Host "[1/4] Generando lista de canciones..." -ForegroundColor Yellow
+node (Join-Path $projectRoot "scripts\generate-music-manifest.mjs") 2>$null
+if ($LASTEXITCODE -eq 0) { Write-Host "Manifest de musica actualizado" -ForegroundColor Green }
+
+Write-Host ""
+Write-Host "[2/4] Iniciando playit..." -ForegroundColor Yellow
 $playitService = Get-Service -Name "playitd" -ErrorAction SilentlyContinue
 if ($playitService) {
     if ($playitService.Status -ne "Running") {
@@ -36,7 +41,7 @@ if ($playitService) {
 
 # 2. Docker / Razzia
 Write-Host ""
-Write-Host "[2/3] Levantando Razzia (Docker)..." -ForegroundColor Yellow
+Write-Host "[3/4] Levantando Razzia (Docker)..." -ForegroundColor Yellow
 docker compose up -d
 if ($LASTEXITCODE -ne 0) { throw "Docker compose fallo. ¿Docker Desktop esta abierto?" }
 
@@ -55,7 +60,7 @@ else { Write-Host "Razzia tardo en responder. Revisa: docker compose logs" -Fore
 
 # 3. Caddy
 Write-Host ""
-Write-Host "[3/3] Iniciando Caddy (SSL)..." -ForegroundColor Yellow
+Write-Host "[4/4] Iniciando Caddy (SSL)..." -ForegroundColor Yellow
 $domain = (Get-Content $domainFile -Raw).Trim()
 $caddyRunning = (Get-Process caddy -ErrorAction SilentlyContinue) -and (Test-PortListening 443)
 

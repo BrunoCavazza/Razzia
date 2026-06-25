@@ -7,6 +7,9 @@
   },
   "joinInstruction": "Rejoins la partie sur",
   "leaderboard": "Classement",
+  "music": {
+    "volume": "Musique"
+  },
   "pinLabel": "Code PIN",
   "playersJoined": "Joueurs connectés : ",
   "questionPrefix": "Question n°",

@@ -7,6 +7,9 @@
   },
   "joinInstruction": "Tritt dem Spiel bei auf",
   "leaderboard": "Bestenliste",
+  "music": {
+    "volume": "Musik"
+  },
   "pinLabel": "PIN-Code",
   "playersJoined": "Verbundene Spieler: ",
   "questionPrefix": "Frage #",

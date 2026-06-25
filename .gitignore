@@ -4,3 +4,8 @@
 .secrets
 release.json
 web2
+
+# Custom presenter background music (drop .mp3 files here)
+/songs/*
+!/songs/.gitkeep
+!/songs/manifest.json

@@ -1,9 +1,16 @@
 import tailwindcss from "@tailwindcss/vite"
 import { tanstackRouter } from "@tanstack/router-plugin/vite"
 import react from "@vitejs/plugin-react"
+import path from "path"
 import { fileURLToPath } from "url"
 import { defineConfig } from "vite"
 import { version } from "../../package.json"
+import { musicPlugin } from "./vite-music-plugin"
+
+const rootDir = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "../..",
+)
 
 export default defineConfig({
   define: {
@@ -18,6 +25,7 @@ export default defineConfig({
     }),
     react(),
     tailwindcss(),
+    musicPlugin(path.join(rootDir, "songs")),
   ],
   resolve: {
     alias: {

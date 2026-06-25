@@ -1,6 +1,7 @@
 import { EVENTS } from "@razzia/common/constants"
 import { STATUS } from "@razzia/common/types/game/status"
 import GameWrapper from "@razzia/web/features/game/components/GameWrapper"
+import { PresenterMusicProvider } from "@razzia/web/features/game/contexts/presenter-music-context"
 import {
   socketClient,
   useEvent,
@@ -98,14 +99,16 @@ const ManagerGamePage = () => {
   }
 
   return (
-    <GameWrapper
-      statusName={status.name}
-      onNext={handleSkip}
-      onBack={status.name === STATUS.SHOW_ROOM ? handleBack : undefined}
-      manager
-    >
-      {CurrentComponent && <CurrentComponent data={status.data as never} />}
-    </GameWrapper>
+    <PresenterMusicProvider>
+      <GameWrapper
+        statusName={status.name}
+        onNext={handleSkip}
+        onBack={status.name === STATUS.SHOW_ROOM ? handleBack : undefined}
+        manager
+      >
+        {CurrentComponent && <CurrentComponent data={status.data as never} />}
+      </GameWrapper>
+    </PresenterMusicProvider>
   )
 }
 
