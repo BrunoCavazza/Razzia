@@ -3,7 +3,7 @@ import type { Status } from "@razzia/common/types/game/status"
 import background from "@razzia/web/assets/background.png"
 import Button from "@razzia/web/components/Button"
 import Loader from "@razzia/web/components/Loader"
-import PresenterMusicVolume from "@razzia/web/features/game/components/PresenterMusicVolume"
+import PresenterMusicControls from "@razzia/web/features/game/components/PresenterMusicControls"
 import {
   useEvent,
   useSocket,
@@ -90,7 +90,7 @@ const GameWrapper = ({
                     {`${questionStates.current} / ${questionStates.total}`}
                   </div>
                 )}
-                {manager && <PresenterMusicVolume />}
+                {manager && <PresenterMusicControls />}
               </div>
 
               <div className="flex items-center gap-2">

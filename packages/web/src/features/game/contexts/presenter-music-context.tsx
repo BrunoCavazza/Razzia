@@ -10,6 +10,7 @@ import {
   PRESENTER_MUSIC_PAUSE_STATUSES,
   PRESENTER_MUSIC_STOP_STATUSES,
   PRESENTER_MUSIC_VOLUME_KEY,
+  VOLUME_FADE_MS,
   fadeAudioVolume,
   shuffle,
 } from "@razzia/web/features/game/utils/presenter-music"
@@ -20,12 +21,21 @@ import {
   useEffect,
   useRef,
   useState,
+  type MutableRefObject,
   type ReactNode,
 } from "react"
+
+interface PresenterMusicControls {
+  skipTrack: () => void
+  togglePause: () => void
+}
 
 interface PresenterMusicContextValue {
   volume: number
   setVolume: (volume: number) => void
+  isPaused: boolean
+  togglePause: () => void
+  skipTrack: () => void
 }
 
 const PresenterMusicContext = createContext<PresenterMusicContextValue | null>(
@@ -90,40 +100,76 @@ const shouldStopForStatus = (statusName: Status | undefined) => {
   )
 }
 
-const PresenterMusicEngine = () => {
+const PresenterMusicEngine = ({
+  volume,
+  userPaused,
+  setUserPaused,
+  controlsRef,
+}: {
+  volume: number
+  userPaused: boolean
+  setUserPaused: (paused: boolean) => void
+  controlsRef: MutableRefObject<PresenterMusicControls>
+}) => {
   const statusName = useManagerStore((state) => state.status?.name)
-  const music = usePresenterMusic()
-  const volume = music?.volume ?? 0.45
 
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const playlistRef = useRef<string[]>([])
   const trackIndexRef = useRef(0)
   const fadeTokenRef = useRef(0)
   const playingRef = useRef(false)
+  const volumeRef = useRef(volume)
+  const userPausedRef = useRef(userPaused)
+  const statusNameRef = useRef(statusName)
+
+  volumeRef.current = volume
+  userPausedRef.current = userPaused
+  statusNameRef.current = statusName
+
+  const isCancelled = (token: number) => token !== fadeTokenRef.current
+
+  const shouldBeAudible = () =>
+    shouldPlayForStatus(statusNameRef.current) && !userPausedRef.current
 
   const playNextTrack = useCallback(async () => {
     const audio = audioRef.current
     const playlist = playlistRef.current
 
-    if (!audio || playlist.length === 0) {
+    if (
+      !audio ||
+      playlist.length === 0 ||
+      shouldStopForStatus(statusNameRef.current)
+    ) {
       return
     }
 
+    const token = ++fadeTokenRef.current
     const src = playlist[trackIndexRef.current % playlist.length]
     trackIndexRef.current += 1
 
     audio.src = src
-    audio.volume = 0
     audio.loop = playlist.length === 1
+    audio.volume = 0
+
+    const targetVolume = shouldBeAudible() ? volumeRef.current : 0
 
     try {
       await audio.play()
       playingRef.current = true
-      await fadeAudioVolume(audio, 0, volume, FADE_MS)
+
+      if (targetVolume > 0) {
+        await fadeAudioVolume(
+          audio,
+          0,
+          targetVolume,
+          FADE_MS,
+          () => isCancelled(token),
+        )
+      }
     } catch {
       playingRef.current = false
     }
-  }, [volume])
+  }, [])
 
   const fadeOutAndPause = useCallback(async () => {
     const audio = audioRef.current
@@ -134,9 +180,16 @@ const PresenterMusicEngine = () => {
 
     const token = ++fadeTokenRef.current
     const startVolume = audio.volume
-    await fadeAudioVolume(audio, startVolume, 0, FADE_MS)
 
-    if (token !== fadeTokenRef.current) {
+    await fadeAudioVolume(
+      audio,
+      startVolume,
+      0,
+      FADE_MS,
+      () => isCancelled(token),
+    )
+
+    if (isCancelled(token)) {
       return
     }
 
@@ -147,7 +200,7 @@ const PresenterMusicEngine = () => {
   const fadeInAndResume = useCallback(async () => {
     const audio = audioRef.current
 
-    if (!audio) {
+    if (!audio || userPausedRef.current) {
       return
     }
 
@@ -158,21 +211,73 @@ const PresenterMusicEngine = () => {
       return
     }
 
+    const targetVolume = volumeRef.current
+
     try {
       if (audio.paused) {
         await audio.play()
       }
 
       playingRef.current = true
-      await fadeAudioVolume(audio, audio.volume, volume, FADE_MS)
 
-      if (token !== fadeTokenRef.current) {
+      if (targetVolume <= 0) {
+        audio.volume = 0
         return
       }
+
+      await fadeAudioVolume(
+        audio,
+        audio.volume,
+        targetVolume,
+        FADE_MS,
+        () => isCancelled(token),
+      )
     } catch {
       await playNextTrack()
     }
-  }, [playNextTrack, volume])
+  }, [playNextTrack])
+
+  const skipTrack = useCallback(async () => {
+    if (shouldStopForStatus(statusNameRef.current)) {
+      return
+    }
+
+    await playNextTrack()
+  }, [playNextTrack])
+
+  const togglePause = useCallback(async () => {
+    if (userPausedRef.current) {
+      setUserPaused(false)
+
+      if (shouldPlayForStatus(statusNameRef.current)) {
+        await fadeInAndResume()
+      }
+
+      return
+    }
+
+    setUserPaused(true)
+    await fadeOutAndPause()
+  }, [fadeInAndResume, fadeOutAndPause, setUserPaused])
+
+  controlsRef.current = { skipTrack, togglePause }
+
+  const playNextTrackRef = useRef(playNextTrack)
+  playNextTrackRef.current = playNextTrack
+
+  const tryStartMusic = useCallback(async () => {
+    if (
+      shouldStopForStatus(statusNameRef.current) ||
+      userPausedRef.current ||
+      !shouldPlayForStatus(statusNameRef.current) ||
+      playingRef.current ||
+      playlistRef.current.length === 0
+    ) {
+      return
+    }
+
+    await fadeInAndResume()
+  }, [fadeInAndResume])
 
   useEffect(() => {
     const loadPlaylist = async () => {
@@ -188,10 +293,12 @@ const PresenterMusicEngine = () => {
         playlistRef.current = [DEFAULT_PRESENTER_TRACK]
         trackIndexRef.current = 0
       }
+
+      await tryStartMusic()
     }
 
     void loadPlaylist()
-  }, [])
+  }, [tryStartMusic])
 
   useEffect(() => {
     const audio = new Audio()
@@ -202,7 +309,7 @@ const PresenterMusicEngine = () => {
         return
       }
 
-      void playNextTrack()
+      void playNextTrackRef.current()
     }
 
     audio.addEventListener("ended", onEnded)
@@ -212,7 +319,7 @@ const PresenterMusicEngine = () => {
       audio.removeEventListener("ended", onEnded)
       audioRef.current = null
     }
-  }, [playNextTrack])
+  }, [])
 
   useEffect(() => {
     const audio = audioRef.current
@@ -221,7 +328,25 @@ const PresenterMusicEngine = () => {
       return
     }
 
-    void fadeAudioVolume(audio, audio.volume, volume, FADE_MS)
+    const token = ++fadeTokenRef.current
+    const target = volumeRef.current
+
+    if (target <= 0) {
+      audio.volume = 0
+      return
+    }
+
+    if (!shouldBeAudible()) {
+      return
+    }
+
+    void fadeAudioVolume(
+      audio,
+      audio.volume,
+      target,
+      VOLUME_FADE_MS,
+      () => isCancelled(token),
+    )
   }, [volume])
 
   useEffect(() => {
@@ -233,12 +358,23 @@ const PresenterMusicEngine = () => {
         return
       }
 
+      if (userPausedRef.current) {
+        return
+      }
+
       if (shouldPauseForStatus(statusName) || !shouldPlayForStatus(statusName)) {
         await fadeOutAndPause()
         return
       }
 
       if (!playingRef.current) {
+        await fadeInAndResume()
+        return
+      }
+
+      const audio = audioRef.current
+
+      if (audio?.paused) {
         await fadeInAndResume()
       }
     }
@@ -256,6 +392,11 @@ export const PresenterMusicProvider = ({ children }: { children: ReactNode }) =>
 
     return Number.isFinite(parsed) ? parsed : 0.45
   })
+  const [userPaused, setUserPaused] = useState(false)
+  const controlsRef = useRef<PresenterMusicControls>({
+    skipTrack: () => {},
+    togglePause: () => {},
+  })
 
   const setVolume = useCallback((next: number) => {
     const clamped = Math.min(1, Math.max(0, next))
@@ -263,9 +404,24 @@ export const PresenterMusicProvider = ({ children }: { children: ReactNode }) =>
     localStorage.setItem(PRESENTER_MUSIC_VOLUME_KEY, String(clamped))
   }, [])
 
+  const skipTrack = useCallback(() => {
+    void controlsRef.current.skipTrack()
+  }, [])
+
+  const togglePause = useCallback(() => {
+    void controlsRef.current.togglePause()
+  }, [])
+
   return (
-    <PresenterMusicContext.Provider value={{ volume, setVolume }}>
-      <PresenterMusicEngine />
+    <PresenterMusicContext.Provider
+      value={{ volume, setVolume, isPaused: userPaused, togglePause, skipTrack }}
+    >
+      <PresenterMusicEngine
+        volume={volume}
+        userPaused={userPaused}
+        setUserPaused={setUserPaused}
+        controlsRef={controlsRef}
+      />
       {children}
     </PresenterMusicContext.Provider>
   )

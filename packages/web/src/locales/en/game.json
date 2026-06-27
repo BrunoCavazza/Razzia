@@ -8,7 +8,10 @@
   "joinInstruction": "Join the game at",
   "leaderboard": "Leaderboard",
   "music": {
-    "volume": "Music"
+    "volume": "Music",
+    "pause": "Pause music",
+    "play": "Play music",
+    "skip": "Next song"
   },
   "pinLabel": "PIN Code",
   "playersJoined": "Players Joined: ",

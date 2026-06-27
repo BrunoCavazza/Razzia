@@ -8,7 +8,10 @@
   "joinInstruction": "以下でゲームに参加してください",
   "leaderboard": "リーダーボード",
   "music": {
-    "volume": "音楽"
+    "volume": "音楽",
+    "pause": "音楽を一時停止",
+    "play": "音楽を再開",
+    "skip": "次の曲"
   },
   "pinLabel": "PINコード",
   "playersJoined": "参加プレイヤー数: ",

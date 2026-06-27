@@ -8,7 +8,10 @@
   "joinInstruction": "Únete al juego en",
   "leaderboard": "Clasificación",
   "music": {
-    "volume": "Música"
+    "volume": "Música",
+    "pause": "Pausar música",
+    "play": "Reanudar música",
+    "skip": "Siguiente canción"
   },
   "pinLabel": "Código PIN",
   "playersJoined": "Jugadores conectados: ",

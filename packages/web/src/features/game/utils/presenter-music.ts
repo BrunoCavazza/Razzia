@@ -5,6 +5,7 @@ export const DEFAULT_PRESENTER_TRACK = SFX.ANSWERS.MUSIC
 export const MUSIC_MANIFEST_URL = "/music/custom/manifest.json"
 export const PRESENTER_MUSIC_VOLUME_KEY = "razzia-presenter-music-volume"
 export const FADE_MS = 1200
+export const VOLUME_FADE_MS = 150
 
 export const PRESENTER_MUSIC_PAUSE_STATUSES = [
   STATUS.SHOW_RESPONSES,
@@ -12,6 +13,9 @@ export const PRESENTER_MUSIC_PAUSE_STATUSES = [
 ] as const
 
 export const PRESENTER_MUSIC_ACTIVE_STATUSES = [
+  STATUS.SHOW_ROOM,
+  STATUS.SHOW_START,
+  STATUS.SHOW_PREPARED,
   STATUS.SHOW_QUESTION,
   STATUS.SELECT_ANSWER,
 ] as const
@@ -37,11 +41,17 @@ export const fadeAudioVolume = (
   from: number,
   to: number,
   durationMs: number,
+  isCancelled?: () => boolean,
 ) =>
   new Promise<void>((resolve) => {
     const start = performance.now()
 
     const step = (now: number) => {
+      if (isCancelled?.()) {
+        resolve()
+        return
+      }
+
       const progress = Math.min((now - start) / durationMs, 1)
       audio.volume = from + (to - from) * progress
 
