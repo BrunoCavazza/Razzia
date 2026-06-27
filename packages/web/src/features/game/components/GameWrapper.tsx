@@ -1,11 +1,9 @@
 import { EVENTS } from "@razzia/common/constants"
 import type { Status } from "@razzia/common/types/game/status"
-import { STATUS } from "@razzia/common/types/game/status"
 import background from "@razzia/web/assets/background.png"
 import Button from "@razzia/web/components/Button"
 import Loader from "@razzia/web/components/Loader"
 import PresenterMusicControls from "@razzia/web/features/game/components/PresenterMusicControls"
-import PresenterMusicPlaylistSelect from "@razzia/web/features/game/components/PresenterMusicPlaylistSelect"
 import CopyControlLinkButton from "@razzia/web/features/control/components/CopyControlLinkButton"
 import {
   useEvent,
@@ -14,6 +12,7 @@ import {
 import { useManagerStore } from "@razzia/web/features/game/stores/manager"
 import { usePlayerStore } from "@razzia/web/features/game/stores/player"
 import { useQuestionStore } from "@razzia/web/features/game/stores/question"
+import { usePresenterMusic } from "@razzia/web/features/game/contexts/presenter-music-context"
 import { MANAGER_SKIP_BTN } from "@razzia/web/features/game/utils/constants"
 import clsx from "clsx"
 import { type PropsWithChildren, useEffect, useState } from "react"
@@ -40,6 +39,7 @@ const GameWrapper = ({
   const { questionStates, setQuestionStates } = useQuestionStore()
   const { t } = useTranslation()
   const [isDisabled, setIsDisabled] = useState(false)
+  const presenterMusic = usePresenterMusic()
   const next = statusName ? MANAGER_SKIP_BTN[statusName] : null
 
   useEvent(EVENTS.GAME.UPDATE_QUESTION, ({ current, total }) => {
@@ -60,6 +60,7 @@ const GameWrapper = ({
   }, [statusName])
 
   const handleNext = () => {
+    presenterMusic?.primeAudioPlayback()
     setIsDisabled(true)
     onNext?.()
   }
@@ -94,9 +95,6 @@ const GameWrapper = ({
                   <div className="flex items-center rounded-md bg-white p-2 px-4 text-lg font-bold text-black">
                     {`${questionStates.current} / ${questionStates.total}`}
                   </div>
-                )}
-                {manager && statusName === STATUS.SHOW_ROOM && (
-                  <PresenterMusicPlaylistSelect />
                 )}
                 {manager && <PresenterMusicControls />}
                 {manager && controlToken && (

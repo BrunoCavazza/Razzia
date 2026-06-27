@@ -84,6 +84,7 @@ class Game {
       canControl: (socket) => this.canControl(socket),
       broadcast: this.broadcastStatus.bind(this),
       send: this.sendStatus.bind(this),
+      onLeaderboardUpdate: () => this.broadcastLeaderboard(),
       onNewQuestion: () => {
         this.playerStatus.clear()
         this.managerStatus = null
@@ -118,6 +119,16 @@ class Game {
 
   get musicPlaylist(): string | null {
     return this._musicPlaylist
+  }
+
+  getLeaderboard(): Player[] {
+    return [...this.playerManager.getAll()].sort((a, b) => b.points - a.points)
+  }
+
+  broadcastLeaderboard(): void {
+    this.io.to(this.gameId).emit(EVENTS.GAME.LEADERBOARD, {
+      leaderboard: this.getLeaderboard(),
+    })
   }
 
   setMusicPlaylist(playlist: string | null): void {
@@ -206,11 +217,13 @@ class Game {
 
   join(socket: Socket, username: string) {
     this.playerManager.join(socket, username)
+    this.broadcastLeaderboard()
   }
 
   kickPlayer(socket: Socket, playerId: string) {
     if (this.playerManager.kick(socket, playerId)) {
       this.playerStatus.delete(playerId)
+      this.broadcastLeaderboard()
     }
   }
 
@@ -317,6 +330,7 @@ class Game {
     if (player) {
       this.io.to(this._manager.id).emit(EVENTS.MANAGER.REMOVE_PLAYER, player.id)
       this.playerManager.broadcastCount()
+      this.broadcastLeaderboard()
     }
 
     return player

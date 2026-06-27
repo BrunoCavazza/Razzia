@@ -1,4 +1,5 @@
 import { EVENTS } from "@razzia/common/constants"
+import type { Player } from "@razzia/common/types/game"
 import type { Status } from "@razzia/common/types/game/status"
 import { STATUS } from "@razzia/common/types/game/status"
 import Button from "@razzia/web/components/Button"
@@ -31,6 +32,8 @@ const CONTROL_STATUS_LABELS: Partial<Record<Status, string>> = {
   [STATUS.WAIT]: "game:control.status.wait",
 }
 
+const CONTROL_LEADERBOARD_LIMIT = 8
+
 interface Props {
   controlToken: string
 }
@@ -45,6 +48,7 @@ const ControlPanel = ({ controlToken }: Props) => {
   const [status, setStatus] = useState<GameStatus<StatusDataMap> | null>(null)
   const [questionLabel, setQuestionLabel] = useState<string | null>(null)
   const [totalPlayers, setTotalPlayers] = useState(0)
+  const [leaderboard, setLeaderboard] = useState<Player[]>([])
   const [isDisabled, setIsDisabled] = useState(false)
 
   const authenticate = useCallback(() => {
@@ -64,6 +68,7 @@ const ControlPanel = ({ controlToken }: Props) => {
     setGameId(data.gameId)
     setStatus({ name: data.status.name, data: data.status.data })
     setTotalPlayers(data.totalPlayers)
+    setLeaderboard(data.leaderboard)
 
     if (data.currentQuestion.total) {
       setQuestionLabel(
@@ -87,6 +92,10 @@ const ControlPanel = ({ controlToken }: Props) => {
 
   useEvent(EVENTS.GAME.TOTAL_PLAYERS, (total) => {
     setTotalPlayers(total)
+  })
+
+  useEvent(EVENTS.GAME.LEADERBOARD, ({ leaderboard: nextLeaderboard }) => {
+    setLeaderboard(nextLeaderboard)
   })
 
   useEvent(EVENTS.GAME.ERROR_MESSAGE, (message) => {
@@ -130,6 +139,8 @@ const ControlPanel = ({ controlToken }: Props) => {
     ? t(CONTROL_STATUS_LABELS[status.name] ?? "game:control.status.wait")
     : t("game:control.connecting")
 
+  const topPlayers = leaderboard.slice(0, CONTROL_LEADERBOARD_LIMIT)
+
   if (!isConnected || authState === "pending") {
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center gap-4 p-6 text-white">
@@ -165,6 +176,35 @@ const ControlPanel = ({ controlToken }: Props) => {
           {t("game:control.players")}: {totalPlayers}
         </p>
       </header>
+
+      {topPlayers.length > 0 && (
+        <section
+          className="mb-6 w-full max-w-sm self-center rounded-xl bg-black/35 px-4 py-3 backdrop-blur-sm"
+          aria-label={t("game:control.leaderboardTitle")}
+        >
+          <p className="mb-2 text-center text-xs font-semibold tracking-wide text-violet-200 uppercase">
+            {t("game:control.leaderboardTitle")}
+          </p>
+          <ol className="space-y-1.5">
+            {topPlayers.map((player, index) => (
+              <li
+                key={player.id}
+                className="flex items-center justify-between gap-3 rounded-lg bg-white/10 px-3 py-2 text-sm"
+              >
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="w-5 shrink-0 text-center font-bold text-violet-300">
+                    {index + 1}
+                  </span>
+                  <span className="truncate font-semibold">{player.username}</span>
+                </div>
+                <span className="shrink-0 font-bold tabular-nums">
+                  {player.points}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
 
       <div className="flex flex-1 flex-col items-center justify-center">
         {canAct && actionLabel ? (

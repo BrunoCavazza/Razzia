@@ -10,6 +10,7 @@ export const EVENTS = {
     RESET: "game:reset",
     UPDATE_QUESTION: "game:updateQuestion",
     PLAYER_ANSWER: "game:playerAnswer",
+    LEADERBOARD: "game:leaderboard",
     CREATE: "game:create",
   },
   PLAYER: {

@@ -40,6 +40,7 @@ export interface RoundManagerOptions {
   canControl: (socket: Socket) => boolean
   broadcast: BroadcastFn
   send: SendFn
+  onLeaderboardUpdate: () => void
   onNewQuestion: () => void
   onGameFinished: (_result: GameResult) => void
 }
@@ -232,6 +233,7 @@ export class RoundManager {
     this.leaderboard = sortedPlayers
     this.tempOldLeaderboard = oldLeaderboard
     this.playersAnswers = []
+    this.opts.onLeaderboardUpdate()
   }
 
   selectAnswer(socket: Socket, answerId: number): void {

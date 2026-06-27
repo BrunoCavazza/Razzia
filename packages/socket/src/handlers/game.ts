@@ -157,6 +157,7 @@ export const gameSocketHandlers = ({ io, socket }: SocketContext) => {
       currentQuestion: game.getCurrentQuestion(),
       totalPlayers: game.players.length,
       controlToken: game.controlToken,
+      leaderboard: game.getLeaderboard(),
     })
     socket.emit(EVENTS.GAME.TOTAL_PLAYERS, game.players.length)
   })

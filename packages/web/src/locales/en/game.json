@@ -44,6 +44,7 @@
     "connecting": "Connecting...",
     "invalidLink": "Invalid link or game unavailable",
     "players": "Players",
+    "leaderboardTitle": "Top players",
     "waitingAction": "Waiting...",
     "status": {
       "lobby": "Lobby",

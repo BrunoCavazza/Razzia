@@ -1,5 +1,8 @@
 import { EVENTS } from "@razzia/common/constants"
 import Button from "@razzia/web/components/Button"
+import MusicPlaylistSelect, {
+  MUSIC_PLAYLIST_STORAGE_KEY,
+} from "@razzia/web/features/game/components/MusicPlaylistSelect"
 import { useSocket } from "@razzia/web/features/game/contexts/socket-context"
 import { useConfig } from "@razzia/web/features/manager/contexts/config-context"
 import clsx from "clsx"
@@ -12,6 +15,11 @@ const ConfigSelectQuizz = () => {
   const { socket } = useSocket()
   const { quizz: quizzList } = useConfig()
   const [selected, setSelected] = useState<string | null>(null)
+  const [musicPlaylist, setMusicPlaylist] = useState<string | null>(() => {
+    const stored = localStorage.getItem(MUSIC_PLAYLIST_STORAGE_KEY)
+
+    return stored === "" || stored === null ? null : stored
+  })
   const { t } = useTranslation()
 
   const handleSelect = (id: string) => () => {
@@ -22,6 +30,16 @@ const ConfigSelectQuizz = () => {
     }
   }
 
+  const handlePlaylistChange = (playlistId: string | null) => {
+    setMusicPlaylist(playlistId)
+
+    if (playlistId) {
+      localStorage.setItem(MUSIC_PLAYLIST_STORAGE_KEY, playlistId)
+    } else {
+      localStorage.removeItem(MUSIC_PLAYLIST_STORAGE_KEY)
+    }
+  }
+
   const handleSubmit = () => {
     if (!selected) {
       toast.error(t("manager:quizz.pleaseSelect"))
@@ -29,11 +47,16 @@ const ConfigSelectQuizz = () => {
       return
     }
 
-    socket.emit(EVENTS.GAME.CREATE, { quizzId: selected })
+    socket.emit(EVENTS.GAME.CREATE, { quizzId: selected, musicPlaylist })
   }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
+      <MusicPlaylistSelect
+        value={musicPlaylist}
+        onChange={handlePlaylistChange}
+      />
+
       {quizzList.length > 0 && (
         <Button className="mb-4 shrink-0" onClick={handleSubmit}>
           {t("manager:quizz.startGame")}

@@ -38,6 +38,7 @@ interface PresenterMusicContextValue {
   isPaused: boolean
   togglePause: () => void
   skipTrack: () => void
+  primeAudioPlayback: () => void
 }
 
 const PresenterMusicContext = createContext<PresenterMusicContextValue | null>(
@@ -107,11 +108,13 @@ const PresenterMusicEngine = ({
   userPaused,
   setUserPaused,
   controlsRef,
+  primeAudioRef,
 }: {
   volume: number
   userPaused: boolean
   setUserPaused: (paused: boolean) => void
   controlsRef: MutableRefObject<PresenterMusicControls>
+  primeAudioRef: MutableRefObject<() => void>
 }) => {
   const statusName = useManagerStore((state) => state.status?.name)
   const musicPlaylist = useManagerStore((state) => state.musicPlaylist)
@@ -268,42 +271,110 @@ const PresenterMusicEngine = ({
   const playNextTrackRef = useRef(playNextTrack)
   playNextTrackRef.current = playNextTrack
 
-  const tryStartMusic = useCallback(async () => {
-    if (
-      shouldStopForStatus(statusNameRef.current) ||
-      userPausedRef.current ||
-      !shouldPlayForStatus(statusNameRef.current) ||
-      playingRef.current ||
-      playlistRef.current.length === 0
-    ) {
+  const resetAudioSource = useCallback(() => {
+    const audio = audioRef.current
+
+    if (!audio) {
       return
     }
 
-    await fadeInAndResume()
-  }, [fadeInAndResume])
+    audio.pause()
+    audio.removeAttribute("src")
+    audio.load()
+    playingRef.current = false
+  }, [])
 
-  useEffect(() => {
-    const loadPlaylist = async () => {
+  const syncPlayback = useCallback(async () => {
+    if (playlistRef.current.length === 0) {
+      return
+    }
+
+    if (shouldStopForStatus(statusNameRef.current)) {
       fadeTokenRef.current += 1
       audioRef.current?.pause()
       playingRef.current = false
-
-      try {
-        const response = await fetch(MUSIC_MANIFEST_URL)
-        const data = (await response.json()) as MusicManifest
-        const tracks = resolvePresenterTracks(data, musicPlaylist)
-        playlistRef.current = shuffle(tracks)
-        trackIndexRef.current = 0
-      } catch {
-        playlistRef.current = [DEFAULT_PRESENTER_TRACK]
-        trackIndexRef.current = 0
-      }
-
-      await tryStartMusic()
+      return
     }
 
-    void loadPlaylist()
-  }, [musicPlaylist, tryStartMusic])
+    if (userPausedRef.current) {
+      return
+    }
+
+    if (
+      shouldPauseForStatus(statusNameRef.current) ||
+      !shouldPlayForStatus(statusNameRef.current)
+    ) {
+      await fadeOutAndPause()
+      return
+    }
+
+    if (!playingRef.current) {
+      await fadeInAndResume()
+      return
+    }
+
+    const audio = audioRef.current
+
+    if (audio?.paused) {
+      await fadeInAndResume()
+    }
+  }, [fadeInAndResume, fadeOutAndPause])
+
+  const syncPlaybackRef = useRef(syncPlayback)
+  syncPlaybackRef.current = syncPlayback
+
+  const primeAudioPlayback = useCallback(() => {
+    const audio = audioRef.current
+
+    if (!audio) {
+      return
+    }
+
+    const playlist = playlistRef.current
+
+    if (playlist.length === 0) {
+      audio.src = DEFAULT_PRESENTER_TRACK
+      audio.volume = 0
+      audio.loop = true
+
+      const unlock = audio.play()
+
+      if (unlock) {
+        unlock
+          .then(() => {
+            audio.pause()
+            audio.removeAttribute("src")
+            audio.load()
+          })
+          .catch(() => {})
+      }
+
+      return
+    }
+
+    if (!audio.src) {
+      const src = playlist[trackIndexRef.current % playlist.length]
+      audio.src = src
+      audio.loop = playlist.length === 1
+      audio.volume = 0
+    }
+
+    const playResult = audio.play()
+
+    if (playResult) {
+      playResult
+        .then(() => {
+          playingRef.current = true
+          void syncPlaybackRef.current()
+        })
+        .catch(() => {
+          playingRef.current = false
+        })
+    }
+  }, [])
+
+  const [audioReady, setAudioReady] = useState(false)
+  const [playlistRevision, setPlaylistRevision] = useState(0)
 
   useEffect(() => {
     const audio = new Audio()
@@ -318,13 +389,45 @@ const PresenterMusicEngine = ({
     }
 
     audio.addEventListener("ended", onEnded)
+    setAudioReady(true)
 
     return () => {
       audio.pause()
       audio.removeEventListener("ended", onEnded)
       audioRef.current = null
+      setAudioReady(false)
     }
   }, [])
+
+  useEffect(() => {
+    if (!audioReady) {
+      return
+    }
+
+    const loadPlaylist = async () => {
+      fadeTokenRef.current += 1
+      resetAudioSource()
+
+      try {
+        const response = await fetch(MUSIC_MANIFEST_URL)
+        const data = (await response.json()) as MusicManifest
+        const tracks = resolvePresenterTracks(data, musicPlaylist)
+        playlistRef.current = shuffle(tracks)
+        trackIndexRef.current = 0
+      } catch {
+        playlistRef.current = [DEFAULT_PRESENTER_TRACK]
+        trackIndexRef.current = 0
+      }
+
+      setPlaylistRevision((revision) => revision + 1)
+    }
+
+    void loadPlaylist()
+  }, [audioReady, musicPlaylist, resetAudioSource])
+
+  useEffect(() => {
+    void syncPlayback()
+  }, [statusName, playlistRevision, userPaused, syncPlayback])
 
   useEffect(() => {
     const audio = audioRef.current
@@ -355,42 +458,14 @@ const PresenterMusicEngine = ({
   }, [volume])
 
   useEffect(() => {
-    const sync = async () => {
-      if (shouldStopForStatus(statusName)) {
-        fadeTokenRef.current += 1
-        audioRef.current?.pause()
-        playingRef.current = false
-        return
-      }
-
-      if (userPausedRef.current) {
-        return
-      }
-
-      if (shouldPauseForStatus(statusName) || !shouldPlayForStatus(statusName)) {
-        await fadeOutAndPause()
-        return
-      }
-
-      if (!playingRef.current) {
-        await fadeInAndResume()
-        return
-      }
-
-      const audio = audioRef.current
-
-      if (audio?.paused) {
-        await fadeInAndResume()
-      }
-    }
-
-    void sync()
-  }, [statusName, fadeInAndResume, fadeOutAndPause])
+    primeAudioRef.current = primeAudioPlayback
+  }, [primeAudioPlayback])
 
   return null
 }
 
 export const PresenterMusicProvider = ({ children }: { children: ReactNode }) => {
+  const primeAudioRef = useRef<() => void>(() => {})
   const [volume, setVolumeState] = useState(() => {
     const stored = localStorage.getItem(PRESENTER_MUSIC_VOLUME_KEY)
     const parsed = stored ? Number.parseFloat(stored) : 0.45
@@ -417,17 +492,40 @@ export const PresenterMusicProvider = ({ children }: { children: ReactNode }) =>
     void controlsRef.current.togglePause()
   }, [])
 
+  const primeAudioPlayback = useCallback(() => {
+    primeAudioRef.current()
+  }, [primeAudioRef])
+
+  const primedRef = useRef(false)
+
+  const handlePointerDown = useCallback(() => {
+    if (primedRef.current) {
+      return
+    }
+
+    primedRef.current = true
+    primeAudioRef.current()
+  }, [primeAudioRef])
+
   return (
     <PresenterMusicContext.Provider
-      value={{ volume, setVolume, isPaused: userPaused, togglePause, skipTrack }}
+      value={{
+        volume,
+        setVolume,
+        isPaused: userPaused,
+        togglePause,
+        skipTrack,
+        primeAudioPlayback,
+      }}
     >
       <PresenterMusicEngine
         volume={volume}
         userPaused={userPaused}
         setUserPaused={setUserPaused}
         controlsRef={controlsRef}
+        primeAudioRef={primeAudioRef}
       />
-      {children}
+      <div onPointerDownCapture={handlePointerDown}>{children}</div>
     </PresenterMusicContext.Provider>
   )
 }

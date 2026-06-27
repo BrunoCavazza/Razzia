@@ -48,6 +48,7 @@ export interface ServerToClientEvents {
     total: number
   }) => void
   [EVENTS.GAME.PLAYER_ANSWER]: (_count: number) => void
+  [EVENTS.GAME.LEADERBOARD]: (_data: { leaderboard: Player[] }) => void
 
   // Player events
   [EVENTS.PLAYER.SUCCESS_RECONNECT]: (_data: {
@@ -81,6 +82,7 @@ export interface ServerToClientEvents {
     currentQuestion: GameUpdateQuestion
     totalPlayers: number
     controlToken: string
+    leaderboard: Player[]
   }) => void
   [EVENTS.CONTROL.ERROR]: (_message: string) => void
   [EVENTS.MANAGER.STATUS_UPDATE]: (_data: {
