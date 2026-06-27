@@ -26,6 +26,8 @@ import {
   type MutableRefObject,
   type ReactNode,
 } from "react"
+import { EVENTS } from "@razzia/common/constants"
+import { useEvent } from "@razzia/web/features/game/contexts/socket-context"
 
 interface PresenterMusicControls {
   skipTrack: () => void
@@ -248,8 +250,73 @@ const PresenterMusicEngine = ({
       return
     }
 
-    await playNextTrack()
-  }, [playNextTrack])
+    const audio = audioRef.current
+    const playlist = playlistRef.current
+
+    if (!audio || playlist.length === 0) {
+      return
+    }
+
+    fadeTokenRef.current += 1
+    audio.pause()
+    playingRef.current = false
+
+    const canPlayNow = shouldBeAudible() && !userPausedRef.current
+
+    if (playlist.length === 1) {
+      audio.currentTime = 0
+
+      if (!canPlayNow) {
+        return
+      }
+
+      const token = ++fadeTokenRef.current
+      audio.volume = 0
+
+      try {
+        await audio.play()
+        playingRef.current = true
+        await fadeAudioVolume(
+          audio,
+          0,
+          volumeRef.current,
+          FADE_MS,
+          () => isCancelled(token),
+        )
+      } catch {
+        playingRef.current = false
+      }
+
+      return
+    }
+
+    const src = playlist[trackIndexRef.current % playlist.length]
+    trackIndexRef.current += 1
+
+    audio.src = src
+    audio.loop = false
+    audio.volume = 0
+
+    if (!canPlayNow) {
+      return
+    }
+
+    const token = ++fadeTokenRef.current
+
+    try {
+      await audio.play()
+      playingRef.current = true
+      await fadeAudioVolume(
+        audio,
+        0,
+        volumeRef.current,
+        FADE_MS,
+        () => isCancelled(token),
+      )
+    } catch {
+      playingRef.current = false
+    }
+  }, [])
 
   const togglePause = useCallback(async () => {
     if (userPausedRef.current) {
@@ -487,6 +554,10 @@ export const PresenterMusicProvider = ({ children }: { children: ReactNode }) =>
   const skipTrack = useCallback(() => {
     void controlsRef.current.skipTrack()
   }, [])
+
+  useEvent(EVENTS.GAME.MUSIC_SKIP, () => {
+    void controlsRef.current.skipTrack()
+  })
 
   const togglePause = useCallback(() => {
     void controlsRef.current.togglePause()

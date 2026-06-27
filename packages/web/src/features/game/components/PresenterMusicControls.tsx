@@ -29,7 +29,10 @@ const PresenterMusicControls = () => {
 
       <button
         type="button"
-        onClick={skipTrack}
+        onClick={() => {
+          music.primeAudioPlayback()
+          skipTrack()
+        }}
         className="rounded p-1 hover:bg-white/15"
         aria-label={t("game:music.skip")}
       >

@@ -16,6 +16,7 @@ import {
 import type { Status as GameStatus } from "@razzia/web/features/game/utils/createStatus"
 import type { StatusDataMap } from "@razzia/common/types/game/status"
 import clsx from "clsx"
+import { SkipForward } from "lucide-react"
 import { useCallback, useEffect, useState } from "react"
 import toast from "react-hot-toast"
 import { useTranslation } from "react-i18next"
@@ -31,8 +32,6 @@ const CONTROL_STATUS_LABELS: Partial<Record<Status, string>> = {
   [STATUS.FINISHED]: "game:control.status.finished",
   [STATUS.WAIT]: "game:control.status.wait",
 }
-
-const CONTROL_LEADERBOARD_LIMIT = 8
 
 interface Props {
   controlToken: string
@@ -121,6 +120,10 @@ const ControlPanel = ({ controlToken }: Props) => {
     socket.emit(MANAGER_SKIP_EVENTS[status.name], { gameId })
   }
 
+  const handleSkipMusic = () => {
+    socket.emit(EVENTS.CONTROL.SKIP_MUSIC)
+  }
+
   useEffect(() => {
     setIsDisabled(false)
   }, [status?.name])
@@ -138,8 +141,6 @@ const ControlPanel = ({ controlToken }: Props) => {
   const statusLabel = status
     ? t(CONTROL_STATUS_LABELS[status.name] ?? "game:control.status.wait")
     : t("game:control.connecting")
-
-  const topPlayers = leaderboard.slice(0, CONTROL_LEADERBOARD_LIMIT)
 
   if (!isConnected || authState === "pending") {
     return (
@@ -160,73 +161,83 @@ const ControlPanel = ({ controlToken }: Props) => {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col p-6 text-white">
-      <header className="mb-8 text-center">
+    <div className="flex min-h-dvh flex-col p-4 pb-6 text-white">
+      <header className="mb-4 shrink-0 text-center">
         <p className="text-sm font-semibold tracking-wide text-violet-300 uppercase">
           {t("game:control.title")}
         </p>
-        <h1 className="mt-2 text-3xl font-bold">{statusLabel}</h1>
+        <h1 className="mt-2 text-2xl font-bold">{statusLabel}</h1>
         {questionLabel && (
-          <p className="mt-2 text-lg text-white/70">
+          <p className="mt-1 text-base text-white/70">
             {t("game:questionPrefix")}
             {questionLabel}
           </p>
         )}
-        <p className="mt-4 text-base text-white/80">
+        <p className="mt-2 text-sm text-white/80">
           {t("game:control.players")}: {totalPlayers}
         </p>
       </header>
 
-      {topPlayers.length > 0 && (
-        <section
-          className="mb-6 w-full max-w-sm self-center rounded-xl bg-black/35 px-4 py-3 backdrop-blur-sm"
-          aria-label={t("game:control.leaderboardTitle")}
-        >
-          <p className="mb-2 text-center text-xs font-semibold tracking-wide text-violet-200 uppercase">
-            {t("game:control.leaderboardTitle")}
-          </p>
-          <ol className="space-y-1.5">
-            {topPlayers.map((player, index) => (
-              <li
-                key={player.id}
-                className="flex items-center justify-between gap-3 rounded-lg bg-white/10 px-3 py-2 text-sm"
-              >
-                <div className="flex min-w-0 items-center gap-2">
-                  <span className="w-5 shrink-0 text-center font-bold text-violet-300">
-                    {index + 1}
+      <div className="flex min-h-0 flex-1 flex-col gap-3">
+        {leaderboard.length > 0 && (
+          <section
+            className="flex min-h-0 flex-1 flex-col rounded-xl bg-black/35 px-4 py-3 backdrop-blur-sm"
+            aria-label={t("game:control.leaderboardTitle")}
+          >
+            <p className="mb-2 shrink-0 text-center text-xs font-semibold tracking-wide text-violet-200 uppercase">
+              {t("game:control.leaderboardTitle")}
+            </p>
+            <ol className="min-h-0 flex-1 space-y-1.5 overflow-y-auto overscroll-contain pr-1">
+              {leaderboard.map((player, index) => (
+                <li
+                  key={player.id}
+                  className="flex items-center justify-between gap-3 rounded-lg bg-white/10 px-3 py-2 text-sm"
+                >
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span className="w-5 shrink-0 text-center font-bold text-violet-300">
+                      {index + 1}
+                    </span>
+                    <span className="truncate font-semibold">
+                      {player.username}
+                    </span>
+                  </div>
+                  <span className="shrink-0 font-bold tabular-nums">
+                    {player.points}
                   </span>
-                  <span className="truncate font-semibold">{player.username}</span>
-                </div>
-                <span className="shrink-0 font-bold tabular-nums">
-                  {player.points}
-                </span>
-              </li>
-            ))}
-          </ol>
-        </section>
-      )}
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
 
-      <div className="flex flex-1 flex-col items-center justify-center">
+        <button
+          type="button"
+          onClick={handleSkipMusic}
+          className="flex shrink-0 items-center justify-center gap-2 self-center rounded-xl bg-white/10 px-5 py-3 text-sm font-semibold backdrop-blur-sm transition hover:bg-white/20"
+        >
+          <SkipForward className="size-5" aria-hidden />
+          {t("game:music.skip")}
+        </button>
+      </div>
+
+      <footer className="mt-4 shrink-0 pt-2">
         {canAct && actionLabel ? (
           <Button
-            className={clsx(
-              "w-full max-w-sm py-6 text-xl font-bold",
-              {
-                "pointer-events-none opacity-60": isDisabled,
-              },
-            )}
+            className={clsx("w-full py-5 text-lg font-bold", {
+              "pointer-events-none opacity-60": isDisabled,
+            })}
             onClick={handleAction}
           >
             {t(actionLabel)}
           </Button>
         ) : (
-          <p className="text-center text-lg text-white/60">
+          <p className="py-4 text-center text-base text-white/60">
             {status?.name === STATUS.FINISHED
               ? t("game:control.status.finished")
               : t("game:control.waitingAction")}
           </p>
         )}
-      </div>
+      </footer>
     </div>
   )
 }

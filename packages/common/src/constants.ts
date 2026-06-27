@@ -11,6 +11,7 @@ export const EVENTS = {
     UPDATE_QUESTION: "game:updateQuestion",
     PLAYER_ANSWER: "game:playerAnswer",
     LEADERBOARD: "game:leaderboard",
+    MUSIC_SKIP: "game:musicSkip",
     CREATE: "game:create",
   },
   PLAYER: {
@@ -63,6 +64,7 @@ export const EVENTS = {
     AUTH: "control:auth",
     SUCCESS: "control:success",
     ERROR: "control:error",
+    SKIP_MUSIC: "control:skipMusic",
   },
 } as const
 

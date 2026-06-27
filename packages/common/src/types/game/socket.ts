@@ -49,6 +49,7 @@ export interface ServerToClientEvents {
   }) => void
   [EVENTS.GAME.PLAYER_ANSWER]: (_count: number) => void
   [EVENTS.GAME.LEADERBOARD]: (_data: { leaderboard: Player[] }) => void
+  [EVENTS.GAME.MUSIC_SKIP]: () => void
 
   // Player events
   [EVENTS.PLAYER.SUCCESS_RECONNECT]: (_data: {
@@ -151,6 +152,7 @@ export interface ClientToServerEvents {
 
   // Control actions
   [EVENTS.CONTROL.AUTH]: (_data: { controlToken: string }) => void
+  [EVENTS.CONTROL.SKIP_MUSIC]: () => void
 
   // Common
   disconnect: () => void

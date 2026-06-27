@@ -162,6 +162,14 @@ export const gameSocketHandlers = ({ io, socket }: SocketContext) => {
     socket.emit(EVENTS.GAME.TOTAL_PLAYERS, game.players.length)
   })
 
+  socket.on(EVENTS.CONTROL.SKIP_MUSIC, () => {
+    const game = registry.getGameByControlSocketId(socket.id)
+
+    if (game) {
+      game.skipPresenterMusic()
+    }
+  })
+
   socket.on(EVENTS.MANAGER.LEAVE, ({ gameId }) => {
     const game = registry.getManagerGame(gameId, clientId)
 

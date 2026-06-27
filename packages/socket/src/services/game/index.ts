@@ -131,6 +131,10 @@ class Game {
     })
   }
 
+  skipPresenterMusic(): void {
+    this.io.to(this._manager.id).emit(EVENTS.GAME.MUSIC_SKIP)
+  }
+
   setMusicPlaylist(playlist: string | null): void {
     if (this.started) {
       return
