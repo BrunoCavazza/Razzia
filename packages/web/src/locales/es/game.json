@@ -29,5 +29,26 @@
   "usernamePlaceholder": "Nombre de usuario aquí",
   "waitingForAnswers": "Esperando que los jugadores respondan",
   "waitingForPlayers": "Esperando jugadores",
-  "wrong": "Mala suerte"
+  "wrong": "Mala suerte",
+  "control": {
+    "title": "Control remoto",
+    "description": "Abrí este link en tu celular para iniciar la partida y avanzar preguntas.",
+    "copyLink": "Copiar link de control",
+    "linkCopied": "Link copiado",
+    "connecting": "Conectando...",
+    "invalidLink": "Link inválido o partida no disponible",
+    "players": "Jugadores",
+    "waitingAction": "Esperando...",
+    "status": {
+      "lobby": "Lobby",
+      "starting": "Iniciando partida",
+      "prepared": "Preparando pregunta",
+      "question": "Mostrando pregunta",
+      "answers": "Respondiendo",
+      "responses": "Revisión de respuestas",
+      "leaderboard": "Clasificación",
+      "finished": "Partida terminada",
+      "wait": "En espera"
+    }
+  }
 }

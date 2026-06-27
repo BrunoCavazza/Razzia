@@ -57,6 +57,11 @@ export const EVENTS = {
     DATA: "results:data",
     DELETE: "results:delete",
   },
+  CONTROL: {
+    AUTH: "control:auth",
+    SUCCESS: "control:success",
+    ERROR: "control:error",
+  },
 } as const
 
 export const NO_TIME_LIMIT = -1

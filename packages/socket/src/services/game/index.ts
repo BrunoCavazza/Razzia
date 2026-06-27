@@ -12,6 +12,7 @@ import { PlayerManager } from "@razzia/socket/services/game/player-manager"
 import { RoundManager } from "@razzia/socket/services/game/round-manager"
 import Registry from "@razzia/socket/services/registry"
 import { createInviteCode } from "@razzia/socket/utils/game"
+import { nanoid } from "nanoid"
 import { v7 as uuid } from "uuid"
 
 const registry = Registry.getInstance()
@@ -19,6 +20,7 @@ const registry = Registry.getInstance()
 class Game {
   readonly gameId: string
   readonly inviteCode: string
+  readonly controlToken: string
 
   private readonly io: Server
   private readonly _manager: {
@@ -26,6 +28,7 @@ class Game {
     clientId: string
     connected: boolean
   }
+  private readonly controlSocketIds = new Set<string>()
   private readonly playerManager: PlayerManager
   private readonly round: RoundManager
   private readonly cooldown: CooldownTimer
@@ -49,6 +52,7 @@ class Game {
     this.io = io
     this.gameId = uuid()
     this.inviteCode = createInviteCode()
+    this.controlToken = nanoid(12)
     this._manager = {
       id: socket.id,
       clientId,
@@ -70,6 +74,7 @@ class Game {
       io,
       gameId: this.gameId,
       getManagerId: () => this._manager.id,
+      canControl: (socket) => this.canControl(socket),
       broadcast: this.broadcastStatus.bind(this),
       send: this.sendStatus.bind(this),
       onNewQuestion: () => {
@@ -83,6 +88,7 @@ class Game {
     socket.emit(EVENTS.MANAGER.GAME_CREATED, {
       gameId: this.gameId,
       inviteCode: this.inviteCode,
+      controlToken: this.controlToken,
     })
 
     console.log(
@@ -102,6 +108,43 @@ class Game {
     return this.round.isStarted()
   }
 
+  canControl(socket: Socket): boolean {
+    return (
+      socket.id === this._manager.id || this.controlSocketIds.has(socket.id)
+    )
+  }
+
+  registerControl(socket: Socket): void {
+    socket.join(this.gameId)
+    this.controlSocketIds.add(socket.id)
+  }
+
+  unregisterControl(socketId: string): void {
+    this.controlSocketIds.delete(socketId)
+  }
+
+  hasControlSocket(socketId: string): boolean {
+    return this.controlSocketIds.has(socketId)
+  }
+
+  getControlStatus(): { name: Status; data: StatusDataMap[Status] } {
+    return (
+      this.managerStatus ??
+      this.lastBroadcastStatus ?? {
+        name: STATUS.SHOW_ROOM,
+        data: {
+          text: "game:waitingForPlayers",
+          inviteCode: this.inviteCode,
+          controlToken: this.controlToken,
+        },
+      }
+    )
+  }
+
+  getCurrentQuestion() {
+    return this.round.getReconnectInfo()
+  }
+
   // ── Status broadcasting ──────────────────────────────────────────────────
 
   private broadcastStatus<T extends Status>(status: T, data: StatusDataMap[T]) {
@@ -119,6 +162,10 @@ class Game {
 
     if (this._manager.id === target) {
       this.managerStatus = statusData
+
+      for (const controlId of this.controlSocketIds) {
+        this.io.to(controlId).emit(EVENTS.GAME.STATUS, statusData)
+      }
     } else {
       this.playerStatus.set(target, statusData)
     }
@@ -174,6 +221,7 @@ class Game {
       currentQuestion: this.round.getReconnectInfo(),
       status,
       players: this.playerManager.getAll(),
+      controlToken: this.controlToken,
     })
     socket.emit(EVENTS.GAME.TOTAL_PLAYERS, this.playerManager.count())
 
@@ -271,8 +319,8 @@ class Game {
     this.round.abortQuestion(socket)
   }
 
-  showLeaderboard() {
-    this.round.showLeaderboard()
+  showLeaderboard(socket: Socket) {
+    this.round.showLeaderboard(socket)
   }
 }
 

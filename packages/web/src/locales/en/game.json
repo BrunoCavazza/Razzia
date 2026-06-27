@@ -29,5 +29,26 @@
   "usernamePlaceholder": "Username here",
   "waitingForAnswers": "Waiting for the players to answer",
   "waitingForPlayers": "Waiting for players",
-  "wrong": "Too bad"
+  "wrong": "Too bad",
+  "control": {
+    "title": "Remote control",
+    "description": "Open this link on your phone to start the game and advance questions.",
+    "copyLink": "Copy control link",
+    "linkCopied": "Link copied",
+    "connecting": "Connecting...",
+    "invalidLink": "Invalid link or game unavailable",
+    "players": "Players",
+    "waitingAction": "Waiting...",
+    "status": {
+      "lobby": "Lobby",
+      "starting": "Starting game",
+      "prepared": "Preparing question",
+      "question": "Showing question",
+      "answers": "Answering",
+      "responses": "Reviewing answers",
+      "leaderboard": "Leaderboard",
+      "finished": "Game finished",
+      "wait": "Waiting"
+    }
+  }
 }

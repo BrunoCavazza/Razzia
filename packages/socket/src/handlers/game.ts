@@ -123,8 +123,35 @@ export const gameSocketHandlers = ({ io, socket }: SocketContext) => {
   )
 
   socket.on(EVENTS.MANAGER.SHOW_LEADERBOARD, ({ gameId }) =>
-    withGame(gameId, socket, (game) => game.showLeaderboard()),
+    withGame(gameId, socket, (game) => game.showLeaderboard(socket)),
   )
+
+  socket.on(EVENTS.CONTROL.AUTH, ({ controlToken }) => {
+    if (!controlToken?.trim()) {
+      socket.emit(EVENTS.CONTROL.ERROR, "game:control.invalidLink")
+
+      return
+    }
+
+    const game = registry.getGameByControlToken(controlToken)
+
+    if (!game) {
+      socket.emit(EVENTS.CONTROL.ERROR, "game:control.invalidLink")
+
+      return
+    }
+
+    game.registerControl(socket)
+
+    socket.emit(EVENTS.CONTROL.SUCCESS, {
+      gameId: game.gameId,
+      status: game.getControlStatus(),
+      currentQuestion: game.getCurrentQuestion(),
+      totalPlayers: game.players.length,
+      controlToken: game.controlToken,
+    })
+    socket.emit(EVENTS.GAME.TOTAL_PLAYERS, game.players.length)
+  })
 
   socket.on(EVENTS.MANAGER.LEAVE, ({ gameId }) => {
     const game = registry.getManagerGame(gameId, clientId)
@@ -145,6 +172,14 @@ export const gameSocketHandlers = ({ io, socket }: SocketContext) => {
 
   socket.on("disconnect", () => {
     console.log(`A user disconnected : ${socket.id}`)
+
+    const controlGame = registry.getGameByControlSocketId(socket.id)
+
+    if (controlGame) {
+      controlGame.unregisterControl(socket.id)
+
+      return
+    }
 
     const managerGame = registry.getGameByManagerSocketId(socket.id)
 

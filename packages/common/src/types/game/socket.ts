@@ -64,13 +64,23 @@ export interface ServerToClientEvents {
     status: { name: Status; data: StatusDataMap[Status] }
     players: Player[]
     currentQuestion: GameUpdateQuestion
+    controlToken: string
   }) => void
   [EVENTS.MANAGER.CONFIG]: (_config: ManagerConfig) => void
   [EVENTS.QUIZZ.DATA]: (_quizz: QuizzWithId) => void
   [EVENTS.MANAGER.GAME_CREATED]: (_data: {
     gameId: string
     inviteCode: string
+    controlToken: string
   }) => void
+  [EVENTS.CONTROL.SUCCESS]: (_data: {
+    gameId: string
+    status: { name: Status; data: StatusDataMap[Status] }
+    currentQuestion: GameUpdateQuestion
+    totalPlayers: number
+    controlToken: string
+  }) => void
+  [EVENTS.CONTROL.ERROR]: (_message: string) => void
   [EVENTS.MANAGER.STATUS_UPDATE]: (_data: {
     status: Status
     data: StatusDataMap[Status]
@@ -127,6 +137,9 @@ export interface ClientToServerEvents {
   // Results actions
   [EVENTS.RESULTS.GET]: (_id: string) => void
   [EVENTS.RESULTS.DELETE]: (_id: string) => void
+
+  // Control actions
+  [EVENTS.CONTROL.AUTH]: (_data: { controlToken: string }) => void
 
   // Common
   disconnect: () => void

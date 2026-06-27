@@ -4,10 +4,12 @@ import background from "@razzia/web/assets/background.png"
 import Button from "@razzia/web/components/Button"
 import Loader from "@razzia/web/components/Loader"
 import PresenterMusicControls from "@razzia/web/features/game/components/PresenterMusicControls"
+import CopyControlLinkButton from "@razzia/web/features/control/components/CopyControlLinkButton"
 import {
   useEvent,
   useSocket,
 } from "@razzia/web/features/game/contexts/socket-context"
+import { useManagerStore } from "@razzia/web/features/game/stores/manager"
 import { usePlayerStore } from "@razzia/web/features/game/stores/player"
 import { useQuestionStore } from "@razzia/web/features/game/stores/question"
 import { MANAGER_SKIP_BTN } from "@razzia/web/features/game/utils/constants"
@@ -31,6 +33,7 @@ const GameWrapper = ({
   manager,
 }: Props) => {
   const { isConnected } = useSocket()
+  const { controlToken } = useManagerStore()
   const { player } = usePlayerStore()
   const { questionStates, setQuestionStates } = useQuestionStore()
   const { t } = useTranslation()
@@ -91,6 +94,9 @@ const GameWrapper = ({
                   </div>
                 )}
                 {manager && <PresenterMusicControls />}
+                {manager && controlToken && (
+                  <CopyControlLinkButton controlToken={controlToken} compact />
+                )}
               </div>
 
               <div className="flex items-center gap-2">

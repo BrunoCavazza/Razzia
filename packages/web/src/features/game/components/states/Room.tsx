@@ -2,6 +2,7 @@ import * as AlertDialog from "@radix-ui/react-alert-dialog"
 import { EVENTS } from "@razzia/common/constants"
 import type { Player } from "@razzia/common/types/game"
 import type { ManagerStatusDataMap } from "@razzia/common/types/game/status"
+import CopyControlLinkButton from "@razzia/web/features/control/components/CopyControlLinkButton"
 import {
   useEvent,
   useSocket,
@@ -17,8 +18,9 @@ interface Props {
   data: ManagerStatusDataMap["SHOW_ROOM"]
 }
 
-const Room = ({ data: { text, inviteCode } }: Props) => {
-  const { gameId } = useManagerStore()
+const Room = ({ data: { text, inviteCode, controlToken: roomControlToken } }: Props) => {
+  const { gameId, controlToken: storeControlToken } = useManagerStore()
+  const controlToken = roomControlToken ?? storeControlToken
   const { socket } = useSocket()
   const webUrl = window.location.origin
   const { players } = useManagerStore()
@@ -78,6 +80,8 @@ const Room = ({ data: { text, inviteCode } }: Props) => {
               <p className="text-6xl font-extrabold">{inviteCode}</p>
             </div>
           </div>
+
+          {controlToken && <CopyControlLinkButton controlToken={controlToken} />}
         </div>
 
         <AlertDialog.Root open={qrOpen} onOpenChange={setQrOpen}>

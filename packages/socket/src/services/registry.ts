@@ -54,6 +54,14 @@ class Registry {
     return this.games.find((g) => g.manager.id === socketId)
   }
 
+  getGameByControlToken(controlToken: string): Game | undefined {
+    return this.games.find((g) => g.controlToken === controlToken)
+  }
+
+  getGameByControlSocketId(socketId: string): Game | undefined {
+    return this.games.find((g) => g.hasControlSocket(socketId))
+  }
+
   getGameByPlayerSocketId(socketId: string): Game | undefined {
     return this.games.find((g) => g.players.some((p) => p.id === socketId))
   }

@@ -37,6 +37,7 @@ export interface RoundManagerOptions {
   io: Server
   gameId: string
   getManagerId: () => string
+  canControl: (socket: Socket) => boolean
   broadcast: BroadcastFn
   send: SendFn
   onNewQuestion: () => void
@@ -69,7 +70,7 @@ export class RoundManager {
   }
 
   async start(socket: Socket): Promise<void> {
-    if (this.opts.getManagerId() !== socket.id) {
+    if (!this.opts.canControl(socket)) {
       return
     }
 
@@ -281,7 +282,7 @@ export class RoundManager {
       return
     }
 
-    if (socket.id !== this.opts.getManagerId()) {
+    if (!this.opts.canControl(socket)) {
       return
     }
 
@@ -298,14 +299,18 @@ export class RoundManager {
       return
     }
 
-    if (socket.id !== this.opts.getManagerId()) {
+    if (!this.opts.canControl(socket)) {
       return
     }
 
     this.opts.cooldown.abort()
   }
 
-  showLeaderboard(): void {
+  showLeaderboard(socket: Socket): void {
+    if (!this.opts.canControl(socket)) {
+      return
+    }
+
     const isLastRound =
       this.currentQuestion + 1 === this.opts.quizz.questions.length
 

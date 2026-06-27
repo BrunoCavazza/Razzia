@@ -13,6 +13,7 @@ import { Route as authLayoutRouteImport } from './pages/(auth)/layout'
 import { Route as authIndexRouteImport } from './pages/(auth)/index'
 import { Route as PartyGameIdRouteImport } from './pages/party/$gameId'
 import { Route as ManagerConfigRouteImport } from './pages/manager/config'
+import { Route as ControlControlTokenRouteImport } from './pages/control/$controlToken'
 import { Route as ManagerQuizzLayoutRouteImport } from './pages/manager/quizz/layout'
 import { Route as ManagerQuizzIndexRouteImport } from './pages/manager/quizz/index'
 import { Route as authManagerIndexRouteImport } from './pages/(auth)/manager/index'
@@ -36,6 +37,11 @@ const PartyGameIdRoute = PartyGameIdRouteImport.update({
 const ManagerConfigRoute = ManagerConfigRouteImport.update({
   id: '/manager/config',
   path: '/manager/config',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ControlControlTokenRoute = ControlControlTokenRouteImport.update({
+  id: '/control/$controlToken',
+  path: '/control/$controlToken',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ManagerQuizzLayoutRoute = ManagerQuizzLayoutRouteImport.update({
@@ -66,6 +72,7 @@ const ManagerQuizzQuizzIdRoute = ManagerQuizzQuizzIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/manager/quizz': typeof ManagerQuizzLayoutRouteWithChildren
+  '/control/$controlToken': typeof ControlControlTokenRoute
   '/manager/config': typeof ManagerConfigRoute
   '/party/$gameId': typeof PartyGameIdRoute
   '/': typeof authIndexRoute
@@ -75,6 +82,7 @@ export interface FileRoutesByFullPath {
   '/manager/quizz/': typeof ManagerQuizzIndexRoute
 }
 export interface FileRoutesByTo {
+  '/control/$controlToken': typeof ControlControlTokenRoute
   '/manager/config': typeof ManagerConfigRoute
   '/party/$gameId': typeof PartyGameIdRoute
   '/': typeof authIndexRoute
@@ -87,6 +95,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/(auth)': typeof authLayoutRouteWithChildren
   '/manager/quizz': typeof ManagerQuizzLayoutRouteWithChildren
+  '/control/$controlToken': typeof ControlControlTokenRoute
   '/manager/config': typeof ManagerConfigRoute
   '/party/$gameId': typeof PartyGameIdRoute
   '/(auth)/': typeof authIndexRoute
@@ -99,6 +108,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/manager/quizz'
+    | '/control/$controlToken'
     | '/manager/config'
     | '/party/$gameId'
     | '/'
@@ -108,6 +118,7 @@ export interface FileRouteTypes {
     | '/manager/quizz/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/control/$controlToken'
     | '/manager/config'
     | '/party/$gameId'
     | '/'
@@ -119,6 +130,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/(auth)'
     | '/manager/quizz'
+    | '/control/$controlToken'
     | '/manager/config'
     | '/party/$gameId'
     | '/(auth)/'
@@ -131,6 +143,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   authLayoutRoute: typeof authLayoutRouteWithChildren
   ManagerQuizzLayoutRoute: typeof ManagerQuizzLayoutRouteWithChildren
+  ControlControlTokenRoute: typeof ControlControlTokenRoute
   ManagerConfigRoute: typeof ManagerConfigRoute
   PartyGameIdRoute: typeof PartyGameIdRoute
   PartyManagerGameIdRoute: typeof PartyManagerGameIdRoute
@@ -164,6 +177,13 @@ declare module '@tanstack/react-router' {
       path: '/manager/config'
       fullPath: '/manager/config'
       preLoaderRoute: typeof ManagerConfigRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/control/$controlToken': {
+      id: '/control/$controlToken'
+      path: '/control/$controlToken'
+      fullPath: '/control/$controlToken'
+      preLoaderRoute: typeof ControlControlTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/manager/quizz': {
@@ -234,6 +254,7 @@ const ManagerQuizzLayoutRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   authLayoutRoute: authLayoutRouteWithChildren,
   ManagerQuizzLayoutRoute: ManagerQuizzLayoutRouteWithChildren,
+  ControlControlTokenRoute: ControlControlTokenRoute,
   ManagerConfigRoute: ManagerConfigRoute,
   PartyGameIdRoute: PartyGameIdRoute,
   PartyManagerGameIdRoute: PartyManagerGameIdRoute,
