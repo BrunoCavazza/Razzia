@@ -12,20 +12,23 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router"
 
 const ManagerConfigPage = () => {
   const { isConnected } = useSocket()
-  const { setGameId, setStatus, setConfig, setControlToken, config } = useManagerStore()
+  const { setGameId, setStatus, setConfig, setControlToken, setMusicPlaylist, config } =
+    useManagerStore()
   const navigate = useNavigate()
 
   useEvent(EVENTS.MANAGER.CONFIG, (data) => {
     setConfig(data)
   })
 
-  useEvent(EVENTS.MANAGER.GAME_CREATED, ({ gameId, inviteCode, controlToken }) => {
+  useEvent(EVENTS.MANAGER.GAME_CREATED, ({ gameId, inviteCode, controlToken, musicPlaylist }) => {
     setGameId(gameId)
     setControlToken(controlToken)
+    setMusicPlaylist(musicPlaylist)
     setStatus(STATUS.SHOW_ROOM, {
       text: "game:waitingForPlayers",
       inviteCode,
       controlToken,
+      musicPlaylist,
     })
     navigate({ to: "/party/manager/$gameId", params: { gameId } })
   })

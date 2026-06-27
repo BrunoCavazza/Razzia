@@ -22,7 +22,7 @@ const ManagerGamePage = () => {
   const navigate = useNavigate()
   const { gameId: gameIdParam } = useParams({ from: "/party/manager/$gameId" })
   const { socket } = useSocket()
-  const { gameId, status, setGameId, setStatus, setPlayers, setControlToken, reset } =
+  const { gameId, status, setGameId, setStatus, setPlayers, setControlToken, setMusicPlaylist, reset } =
     useManagerStore()
   const { setQuestionStates } = useQuestionStore()
   const { t } = useTranslation()
@@ -47,9 +47,11 @@ const ManagerGamePage = () => {
       players,
       currentQuestion,
       controlToken,
+      musicPlaylist,
     }) => {
       setGameId(reconnectGameId)
       setControlToken(controlToken)
+      setMusicPlaylist(musicPlaylist)
       setStatus(reconnectStatus.name, reconnectStatus.data)
       setPlayers(players)
       setQuestionStates(currentQuestion)

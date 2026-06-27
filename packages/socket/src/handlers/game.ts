@@ -62,7 +62,7 @@ export const gameSocketHandlers = ({ io, socket }: SocketContext) => {
     socket.emit(EVENTS.GAME.RESET, "errors:game.expired")
   })
 
-  socket.on(EVENTS.GAME.CREATE, (quizzId) => {
+  socket.on(EVENTS.GAME.CREATE, ({ quizzId, musicPlaylist = null }) => {
     const quizzList = getQuizz()
     const quizz = quizzList.find((q) => q.id === quizzId)
 
@@ -72,7 +72,7 @@ export const gameSocketHandlers = ({ io, socket }: SocketContext) => {
       return
     }
 
-    const game = new Game(io, socket, quizz)
+    const game = new Game(io, socket, quizz, musicPlaylist ?? null)
     registry.addGame(game)
   })
 

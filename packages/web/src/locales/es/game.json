@@ -11,7 +11,13 @@
     "volume": "Música",
     "pause": "Pausar música",
     "play": "Reanudar música",
-    "skip": "Siguiente canción"
+    "skip": "Siguiente canción",
+    "playlist": {
+      "title": "Estilo musical",
+      "default": "Música del juego",
+      "trackCount": "{{count}} canciones",
+      "empty": "No hay carpetas con música en songs/"
+    }
   },
   "pinLabel": "Código PIN",
   "playersJoined": "Jugadores conectados: ",

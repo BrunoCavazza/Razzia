@@ -1,21 +1,20 @@
 import fs from "fs"
 import path from "path"
+import { createRequire } from "module"
+import { fileURLToPath } from "url"
 import type { Plugin } from "vite"
 
-const AUDIO_EXT = new Set([".mp3", ".ogg", ".wav", ".m4a", ".flac"])
-
-const buildManifest = (songsDir: string) => {
-  if (!fs.existsSync(songsDir)) {
-    return { tracks: [] as string[] }
+const rootDir = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "../..",
+)
+const require = createRequire(import.meta.url)
+const { buildMusicManifest } = require(
+  path.join(rootDir, "scripts/music-manifest.mjs"),
+) as {
+  buildMusicManifest: (songsDir: string) => {
+    playlists: Array<{ id: string; name: string; tracks: string[] }>
   }
-
-  const tracks = fs
-    .readdirSync(songsDir)
-    .filter((file) => AUDIO_EXT.has(path.extname(file).toLowerCase()))
-    .sort((a, b) => a.localeCompare(b))
-    .map((file) => `/music/custom/${encodeURIComponent(file)}`)
-
-  return { tracks }
 }
 
 export const musicPlugin = (songsDir: string): Plugin => {
@@ -28,20 +27,25 @@ export const musicPlugin = (songsDir: string): Plugin => {
 
       if (req.url === "/music/custom/manifest.json") {
         res.setHeader("Content-Type", "application/json")
-        res.end(JSON.stringify(buildManifest(songsDir)))
+        res.end(JSON.stringify(buildMusicManifest(songsDir)))
         return
       }
 
       const relative = decodeURIComponent(
-        req.url.replace("/music/custom/", ""),
+        req.url.replace("/music/custom/", "").split("?")[0] ?? "",
       )
-      const filePath = path.join(songsDir, relative)
+      const filePath = path.resolve(songsDir, relative)
+      const normalizedSongsDir = path.resolve(songsDir)
 
       if (
-        !filePath.startsWith(songsDir) ||
-        !fs.existsSync(filePath) ||
-        !fs.statSync(filePath).isFile()
+        !filePath.startsWith(`${normalizedSongsDir}${path.sep}`) &&
+        filePath !== normalizedSongsDir
       ) {
+        next()
+        return
+      }
+
+      if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
         next()
         return
       }

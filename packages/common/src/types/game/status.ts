@@ -43,7 +43,7 @@ export interface CommonStatusDataMap {
 }
 
 interface ManagerExtraStatus {
-  SHOW_ROOM: { text: string; inviteCode?: string; controlToken?: string }
+  SHOW_ROOM: { text: string; inviteCode?: string; controlToken?: string; musicPlaylist?: string | null }
   SHOW_RESPONSES: {
     question: string
     responses: Record<number, number>

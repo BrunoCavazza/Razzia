@@ -7,6 +7,35 @@ export const PRESENTER_MUSIC_VOLUME_KEY = "razzia-presenter-music-volume"
 export const FADE_MS = 1200
 export const VOLUME_FADE_MS = 150
 
+export interface MusicPlaylist {
+  id: string
+  name: string
+  tracks: string[]
+}
+
+export interface MusicManifest {
+  playlists: MusicPlaylist[]
+}
+
+export const resolvePresenterTracks = (
+  manifest: MusicManifest,
+  musicPlaylist: string | null | undefined,
+): string[] => {
+  if (!musicPlaylist) {
+    return [DEFAULT_PRESENTER_TRACK]
+  }
+
+  const playlist = manifest.playlists.find(
+    (entry) => entry.id === musicPlaylist,
+  )
+
+  if (!playlist || playlist.tracks.length === 0) {
+    return [DEFAULT_PRESENTER_TRACK]
+  }
+
+  return playlist.tracks
+}
+
 export const PRESENTER_MUSIC_PAUSE_STATUSES = [
   STATUS.SHOW_RESPONSES,
   STATUS.SHOW_LEADERBOARD,

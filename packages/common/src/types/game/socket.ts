@@ -65,6 +65,7 @@ export interface ServerToClientEvents {
     players: Player[]
     currentQuestion: GameUpdateQuestion
     controlToken: string
+    musicPlaylist: string | null
   }) => void
   [EVENTS.MANAGER.CONFIG]: (_config: ManagerConfig) => void
   [EVENTS.QUIZZ.DATA]: (_quizz: QuizzWithId) => void
@@ -72,6 +73,7 @@ export interface ServerToClientEvents {
     gameId: string
     inviteCode: string
     controlToken: string
+    musicPlaylist: string | null
   }) => void
   [EVENTS.CONTROL.SUCCESS]: (_data: {
     gameId: string
@@ -102,7 +104,10 @@ export interface ServerToClientEvents {
 
 export interface ClientToServerEvents {
   // Manager actions
-  [EVENTS.GAME.CREATE]: (_quizzId: string) => void
+  [EVENTS.GAME.CREATE]: (_data: {
+    quizzId: string
+    musicPlaylist?: string | null
+  }) => void
   [EVENTS.MANAGER.AUTH]: (_password: string) => void
   [EVENTS.MANAGER.RECONNECT]: (_message: { gameId: string }) => void
   [EVENTS.MANAGER.LEAVE]: (_message: { gameId: string }) => void

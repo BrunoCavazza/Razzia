@@ -11,7 +11,13 @@
     "volume": "Music",
     "pause": "Pause music",
     "play": "Play music",
-    "skip": "Next song"
+    "skip": "Next song",
+    "playlist": {
+      "title": "Music style",
+      "default": "Game music",
+      "trackCount": "{{count}} songs",
+      "empty": "No music folders found in songs/"
+    }
   },
   "pinLabel": "PIN Code",
   "playersJoined": "Players Joined: ",

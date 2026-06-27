@@ -12,12 +12,14 @@ interface ManagerStore<T> {
 
   gameId: string | null
   controlToken: string | null
+  musicPlaylist: string | null
   status: Status<T> | null
   players: Player[]
 
   setConfig: (_config: ManagerConfig) => void
   setGameId: (_gameId: string | null) => void
   setControlToken: (_controlToken: string | null) => void
+  setMusicPlaylist: (_musicPlaylist: string | null) => void
   setStatus: <K extends keyof T>(_name: K, _data: T[K]) => void
   resetStatus: () => void
   setPlayers: (_players: Player[]) => void
@@ -29,6 +31,7 @@ const initialState = {
   config: null,
   gameId: null,
   controlToken: null,
+  musicPlaylist: null,
   status: null,
   players: [],
 }
@@ -41,6 +44,8 @@ export const useManagerStore = create<ManagerStore<StatusDataMap>>((set) => ({
   setGameId: (gameId) => set({ gameId }),
 
   setControlToken: (controlToken) => set({ controlToken }),
+
+  setMusicPlaylist: (musicPlaylist) => set({ musicPlaylist }),
 
   setStatus: (name, data) => set({ status: createStatus(name, data) }),
   resetStatus: () => set({ status: null }),

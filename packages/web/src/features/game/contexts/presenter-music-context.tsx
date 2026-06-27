@@ -12,7 +12,9 @@ import {
   PRESENTER_MUSIC_VOLUME_KEY,
   VOLUME_FADE_MS,
   fadeAudioVolume,
+  resolvePresenterTracks,
   shuffle,
+  type MusicManifest,
 } from "@razzia/web/features/game/utils/presenter-music"
 import {
   createContext,
@@ -112,6 +114,7 @@ const PresenterMusicEngine = ({
   controlsRef: MutableRefObject<PresenterMusicControls>
 }) => {
   const statusName = useManagerStore((state) => state.status?.name)
+  const musicPlaylist = useManagerStore((state) => state.musicPlaylist)
 
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const playlistRef = useRef<string[]>([])
@@ -281,13 +284,15 @@ const PresenterMusicEngine = ({
 
   useEffect(() => {
     const loadPlaylist = async () => {
+      fadeTokenRef.current += 1
+      audioRef.current?.pause()
+      playingRef.current = false
+
       try {
         const response = await fetch(MUSIC_MANIFEST_URL)
-        const data = (await response.json()) as { tracks?: string[] }
-        playlistRef.current =
-          data.tracks && data.tracks.length > 0
-            ? shuffle(data.tracks)
-            : [DEFAULT_PRESENTER_TRACK]
+        const data = (await response.json()) as MusicManifest
+        const tracks = resolvePresenterTracks(data, musicPlaylist)
+        playlistRef.current = shuffle(tracks)
         trackIndexRef.current = 0
       } catch {
         playlistRef.current = [DEFAULT_PRESENTER_TRACK]
@@ -298,7 +303,7 @@ const PresenterMusicEngine = ({
     }
 
     void loadPlaylist()
-  }, [tryStartMusic])
+  }, [musicPlaylist, tryStartMusic])
 
   useEffect(() => {
     const audio = new Audio()

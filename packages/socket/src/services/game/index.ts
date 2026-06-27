@@ -21,6 +21,7 @@ class Game {
   readonly gameId: string
   readonly inviteCode: string
   readonly controlToken: string
+  readonly musicPlaylist: string | null
 
   private readonly io: Server
   private readonly _manager: {
@@ -46,13 +47,19 @@ class Game {
     { name: Status; data: StatusDataMap[Status] }
   >()
 
-  constructor(io: Server, socket: Socket, quizz: Quizz) {
+  constructor(
+    io: Server,
+    socket: Socket,
+    quizz: Quizz,
+    musicPlaylist: string | null = null,
+  ) {
     const clientId = socket.handshake.auth.clientId as string
 
     this.io = io
     this.gameId = uuid()
     this.inviteCode = createInviteCode()
     this.controlToken = nanoid(12)
+    this.musicPlaylist = musicPlaylist
     this._manager = {
       id: socket.id,
       clientId,
@@ -89,6 +96,7 @@ class Game {
       gameId: this.gameId,
       inviteCode: this.inviteCode,
       controlToken: this.controlToken,
+      musicPlaylist: this.musicPlaylist,
     })
 
     console.log(
@@ -136,6 +144,7 @@ class Game {
           text: "game:waitingForPlayers",
           inviteCode: this.inviteCode,
           controlToken: this.controlToken,
+          musicPlaylist: this.musicPlaylist,
         },
       }
     )
@@ -222,6 +231,7 @@ class Game {
       status,
       players: this.playerManager.getAll(),
       controlToken: this.controlToken,
+      musicPlaylist: this.musicPlaylist,
     })
     socket.emit(EVENTS.GAME.TOTAL_PLAYERS, this.playerManager.count())
 
