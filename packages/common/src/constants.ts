@@ -38,6 +38,7 @@ export const EVENTS = {
     ABORT_QUIZ: "manager:abortQuiz",
     NEXT_QUESTION: "manager:nextQuestion",
     SHOW_LEADERBOARD: "manager:showLeaderboard",
+    SET_MUSIC_PLAYLIST: "manager:setMusicPlaylist",
     GET_CONFIG: "manager:getConfig",
     LOGOUT: "manager:logout",
     UNAUTHORIZED: "manager:unauthorized",

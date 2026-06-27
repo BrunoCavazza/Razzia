@@ -1,15 +1,25 @@
 {
   "playlists": [
     {
-      "id": "default",
-      "name": "General",
+      "id": "Argentina",
+      "name": "Argentina",
       "tracks": [
-        "/music/custom/Aiobahn%20%26%20Vin%20-%20About%20U.mp3",
-        "/music/custom/Bad%20Computer%20-%20Silhouette%20(Feat.%20Skyelle).mp3",
-        "/music/custom/Dion%20Timmer%20-%20Shiawase.mp3",
-        "/music/custom/Duumu%20-%20Keep%20You%20(feat.%20Sundial).mp3",
-        "/music/custom/Soupandreas%20%26%20Inverness%20-%20Hours.mp3",
-        "/music/custom/Stephen%20Walking%20-%20Glide.mp3"
+        "/music/custom/Argentina/Dale%20dale%20boca.mp3",
+        "/music/custom/Argentina/La%20T%20y%20La%20M%20-%20pa'%20la%20Selecci%C3%B3n%20LETRA.mp3",
+        "/music/custom/Argentina/Ole%20Ole%20Ola!.mp3",
+        "/music/custom/Argentina/Soy%20Cordobes.mp3"
+      ]
+    },
+    {
+      "id": "Monstercat",
+      "name": "Monstercat",
+      "tracks": [
+        "/music/custom/Monstercat/Aiobahn%20%26%20Vin%20-%20About%20U.mp3",
+        "/music/custom/Monstercat/Bad%20Computer%20-%20Silhouette%20(Feat.%20Skyelle).mp3",
+        "/music/custom/Monstercat/Dion%20Timmer%20-%20Shiawase.mp3",
+        "/music/custom/Monstercat/Duumu%20-%20Keep%20You%20(feat.%20Sundial).mp3",
+        "/music/custom/Monstercat/Soupandreas%20%26%20Inverness%20-%20Hours.mp3",
+        "/music/custom/Monstercat/Stephen%20Walking%20-%20Glide.mp3"
       ]
     }
   ]

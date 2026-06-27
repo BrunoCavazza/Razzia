@@ -2,7 +2,6 @@ import * as AlertDialog from "@radix-ui/react-alert-dialog"
 import { EVENTS } from "@razzia/common/constants"
 import type { Player } from "@razzia/common/types/game"
 import type { ManagerStatusDataMap } from "@razzia/common/types/game/status"
-import CopyControlLinkButton from "@razzia/web/features/control/components/CopyControlLinkButton"
 import {
   useEvent,
   useSocket,
@@ -18,9 +17,8 @@ interface Props {
   data: ManagerStatusDataMap["SHOW_ROOM"]
 }
 
-const Room = ({ data: { text, inviteCode, controlToken: roomControlToken } }: Props) => {
-  const { gameId, controlToken: storeControlToken } = useManagerStore()
-  const controlToken = roomControlToken ?? storeControlToken
+const Room = ({ data: { text, inviteCode } }: Props) => {
+  const { gameId } = useManagerStore()
   const { socket } = useSocket()
   const webUrl = window.location.origin
   const { players } = useManagerStore()
@@ -64,24 +62,20 @@ const Room = ({ data: { text, inviteCode, controlToken: roomControlToken } }: Pr
   return (
     <section className="relative mx-auto flex w-full max-w-7xl flex-1 flex-col items-center justify-center px-2">
       <div className="mb-10 flex flex-col-reverse items-center gap-3 md:flex-row md:items-stretch">
-        <div className="flex flex-col gap-3 md:flex-row">
-          <div className="flex flex-col items-center justify-center rounded-xl bg-white px-6 py-4 md:flex-row">
-            <div>
-              <p className="text-2xl font-bold">{t("game:joinInstruction")}</p>
-              <p className="max-w-64 text-lg font-extrabold break-all">
-                {webUrl}
-              </p>
-            </div>
-
-            <div className="my-4 h-0.5 w-full bg-gray-300 md:mx-4 md:h-full md:w-0.5" />
-
-            <div>
-              <p className="text-2xl font-bold">{t("game:gamePinLabel")}</p>
-              <p className="text-6xl font-extrabold">{inviteCode}</p>
-            </div>
+        <div className="flex flex-col items-center justify-center rounded-xl bg-white px-6 py-4 md:flex-row">
+          <div>
+            <p className="text-2xl font-bold">{t("game:joinInstruction")}</p>
+            <p className="max-w-64 text-lg font-extrabold break-all">
+              {webUrl}
+            </p>
           </div>
 
-          {controlToken && <CopyControlLinkButton controlToken={controlToken} />}
+          <div className="my-4 h-0.5 w-full bg-gray-300 md:mx-4 md:h-full md:w-0.5" />
+
+          <div>
+            <p className="text-2xl font-bold">{t("game:gamePinLabel")}</p>
+            <p className="text-6xl font-extrabold">{inviteCode}</p>
+          </div>
         </div>
 
         <AlertDialog.Root open={qrOpen} onOpenChange={setQrOpen}>

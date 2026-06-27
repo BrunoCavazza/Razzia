@@ -122,6 +122,14 @@ export const gameSocketHandlers = ({ io, socket }: SocketContext) => {
     withGame(gameId, socket, (game) => game.nextRound(socket)),
   )
 
+  socket.on(EVENTS.MANAGER.SET_MUSIC_PLAYLIST, ({ gameId, musicPlaylist }) => {
+    const game = registry.getManagerGame(gameId, clientId)
+
+    if (game) {
+      game.setMusicPlaylist(musicPlaylist ?? null)
+    }
+  })
+
   socket.on(EVENTS.MANAGER.SHOW_LEADERBOARD, ({ gameId }) =>
     withGame(gameId, socket, (game) => game.showLeaderboard(socket)),
   )

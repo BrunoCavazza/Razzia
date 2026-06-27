@@ -119,6 +119,10 @@ export interface ClientToServerEvents {
   [EVENTS.MANAGER.ABORT_QUIZ]: (_message: MessageGameId) => void
   [EVENTS.MANAGER.NEXT_QUESTION]: (_message: MessageGameId) => void
   [EVENTS.MANAGER.SHOW_LEADERBOARD]: (_message: MessageGameId) => void
+  [EVENTS.MANAGER.SET_MUSIC_PLAYLIST]: (_message: {
+    gameId: string
+    musicPlaylist: string | null
+  }) => void
   [EVENTS.MANAGER.GET_CONFIG]: () => void
   [EVENTS.MANAGER.LOGOUT]: () => void
 

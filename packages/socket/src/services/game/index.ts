@@ -21,8 +21,8 @@ class Game {
   readonly gameId: string
   readonly inviteCode: string
   readonly controlToken: string
-  readonly musicPlaylist: string | null
 
+  private _musicPlaylist: string | null
   private readonly io: Server
   private readonly _manager: {
     id: string
@@ -59,7 +59,7 @@ class Game {
     this.gameId = uuid()
     this.inviteCode = createInviteCode()
     this.controlToken = nanoid(12)
-    this.musicPlaylist = musicPlaylist
+    this._musicPlaylist = musicPlaylist ?? null
     this._manager = {
       id: socket.id,
       clientId,
@@ -114,6 +114,26 @@ class Game {
 
   get started(): boolean {
     return this.round.isStarted()
+  }
+
+  get musicPlaylist(): string | null {
+    return this._musicPlaylist
+  }
+
+  setMusicPlaylist(playlist: string | null): void {
+    if (this.started) {
+      return
+    }
+
+    this._musicPlaylist = playlist
+
+    if (this.managerStatus?.name === STATUS.SHOW_ROOM) {
+      const data = this.managerStatus.data as StatusDataMap["SHOW_ROOM"]
+      this.managerStatus = {
+        name: STATUS.SHOW_ROOM,
+        data: { ...data, musicPlaylist: playlist },
+      }
+    }
   }
 
   canControl(socket: Socket): boolean {

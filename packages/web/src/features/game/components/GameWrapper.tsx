@@ -1,9 +1,11 @@
 import { EVENTS } from "@razzia/common/constants"
 import type { Status } from "@razzia/common/types/game/status"
+import { STATUS } from "@razzia/common/types/game/status"
 import background from "@razzia/web/assets/background.png"
 import Button from "@razzia/web/components/Button"
 import Loader from "@razzia/web/components/Loader"
 import PresenterMusicControls from "@razzia/web/features/game/components/PresenterMusicControls"
+import PresenterMusicPlaylistSelect from "@razzia/web/features/game/components/PresenterMusicPlaylistSelect"
 import CopyControlLinkButton from "@razzia/web/features/control/components/CopyControlLinkButton"
 import {
   useEvent,
@@ -87,11 +89,14 @@ const GameWrapper = ({
         ) : (
           <>
             <div className="flex w-full items-start justify-between gap-2 p-4">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 {questionStates && (
                   <div className="flex items-center rounded-md bg-white p-2 px-4 text-lg font-bold text-black">
                     {`${questionStates.current} / ${questionStates.total}`}
                   </div>
+                )}
+                {manager && statusName === STATUS.SHOW_ROOM && (
+                  <PresenterMusicPlaylistSelect />
                 )}
                 {manager && <PresenterMusicControls />}
                 {manager && controlToken && (
