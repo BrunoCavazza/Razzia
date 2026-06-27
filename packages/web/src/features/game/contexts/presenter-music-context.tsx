@@ -26,8 +26,6 @@ import {
   type MutableRefObject,
   type ReactNode,
 } from "react"
-import { EVENTS } from "@razzia/common/constants"
-import { useEvent } from "@razzia/web/features/game/contexts/socket-context"
 
 interface PresenterMusicControls {
   skipTrack: () => void
@@ -179,71 +177,21 @@ const PresenterMusicEngine = ({
     }
   }, [])
 
-  const fadeOutAndPause = useCallback(async () => {
+  const ensureTrackLoaded = useCallback(() => {
     const audio = audioRef.current
+    const playlist = playlistRef.current
 
-    if (!audio || !playingRef.current) {
+    if (!audio || playlist.length === 0 || audio.src) {
       return
     }
 
-    const token = ++fadeTokenRef.current
-    const startVolume = audio.volume
+    const src = playlist[trackIndexRef.current % playlist.length]
+    trackIndexRef.current += 1
 
-    await fadeAudioVolume(
-      audio,
-      startVolume,
-      0,
-      FADE_MS,
-      () => isCancelled(token),
-    )
-
-    if (isCancelled(token)) {
-      return
-    }
-
-    audio.pause()
-    playingRef.current = false
+    audio.src = src
+    audio.loop = playlist.length === 1
+    audio.volume = 0
   }, [])
-
-  const fadeInAndResume = useCallback(async () => {
-    const audio = audioRef.current
-
-    if (!audio || userPausedRef.current) {
-      return
-    }
-
-    const token = ++fadeTokenRef.current
-
-    if (!audio.src) {
-      await playNextTrack()
-      return
-    }
-
-    const targetVolume = volumeRef.current
-
-    try {
-      if (audio.paused) {
-        await audio.play()
-      }
-
-      playingRef.current = true
-
-      if (targetVolume <= 0) {
-        audio.volume = 0
-        return
-      }
-
-      await fadeAudioVolume(
-        audio,
-        audio.volume,
-        targetVolume,
-        FADE_MS,
-        () => isCancelled(token),
-      )
-    } catch {
-      await playNextTrack()
-    }
-  }, [playNextTrack])
 
   const skipTrack = useCallback(async () => {
     if (shouldStopForStatus(statusNameRef.current)) {
@@ -257,54 +205,27 @@ const PresenterMusicEngine = ({
       return
     }
 
-    fadeTokenRef.current += 1
-    audio.pause()
-    playingRef.current = false
-
-    const canPlayNow = shouldBeAudible() && !userPausedRef.current
-
-    if (playlist.length === 1) {
-      audio.currentTime = 0
-
-      if (!canPlayNow) {
-        return
-      }
-
-      const token = ++fadeTokenRef.current
-      audio.volume = 0
-
-      try {
-        await audio.play()
-        playingRef.current = true
-        await fadeAudioVolume(
-          audio,
-          0,
-          volumeRef.current,
-          FADE_MS,
-          () => isCancelled(token),
-        )
-      } catch {
-        playingRef.current = false
-      }
-
-      return
-    }
-
+    const token = ++fadeTokenRef.current
     const src = playlist[trackIndexRef.current % playlist.length]
     trackIndexRef.current += 1
 
     audio.src = src
-    audio.loop = false
+    audio.loop = playlist.length === 1
     audio.volume = 0
 
-    if (!canPlayNow) {
+    if (!shouldBeAudible()) {
+      audio.pause()
+      playingRef.current = false
       return
     }
 
-    const token = ++fadeTokenRef.current
-
     try {
       await audio.play()
+
+      if (isCancelled(token)) {
+        return
+      }
+
       playingRef.current = true
       await fadeAudioVolume(
         audio,
@@ -318,20 +239,9 @@ const PresenterMusicEngine = ({
     }
   }, [])
 
-  const togglePause = useCallback(async () => {
-    if (userPausedRef.current) {
-      setUserPaused(false)
-
-      if (shouldPlayForStatus(statusNameRef.current)) {
-        await fadeInAndResume()
-      }
-
-      return
-    }
-
-    setUserPaused(true)
-    await fadeOutAndPause()
-  }, [fadeInAndResume, fadeOutAndPause, setUserPaused])
+  const togglePause = useCallback(() => {
+    setUserPaused(!userPausedRef.current)
+  }, [setUserPaused])
 
   controlsRef.current = { skipTrack, togglePause }
 
@@ -352,40 +262,74 @@ const PresenterMusicEngine = ({
   }, [])
 
   const syncPlayback = useCallback(async () => {
-    if (playlistRef.current.length === 0) {
+    const audio = audioRef.current
+
+    if (!audio || playlistRef.current.length === 0) {
       return
     }
 
-    if (shouldStopForStatus(statusNameRef.current)) {
-      fadeTokenRef.current += 1
-      audioRef.current?.pause()
+    const status = statusNameRef.current
+    const token = ++fadeTokenRef.current
+
+    if (shouldStopForStatus(status)) {
+      audio.pause()
+      audio.volume = 0
       playingRef.current = false
       return
     }
 
-    if (userPausedRef.current) {
+    const audible =
+      !userPausedRef.current &&
+      shouldPlayForStatus(status) &&
+      !shouldPauseForStatus(status)
+
+    if (!audible) {
+      if (audio.paused) {
+        playingRef.current = false
+        return
+      }
+
+      await fadeAudioVolume(
+        audio,
+        audio.volume,
+        0,
+        FADE_MS,
+        () => isCancelled(token),
+      )
+
+      if (isCancelled(token)) {
+        return
+      }
+
+      audio.pause()
+      playingRef.current = false
       return
     }
 
-    if (
-      shouldPauseForStatus(statusNameRef.current) ||
-      !shouldPlayForStatus(statusNameRef.current)
-    ) {
-      await fadeOutAndPause()
-      return
-    }
+    ensureTrackLoaded()
 
-    if (!playingRef.current) {
-      await fadeInAndResume()
-      return
-    }
+    try {
+      if (audio.paused) {
+        await audio.play()
+      }
 
-    const audio = audioRef.current
+      if (isCancelled(token)) {
+        return
+      }
 
-    if (audio?.paused) {
-      await fadeInAndResume()
+      playingRef.current = true
+
+      await fadeAudioVolume(
+        audio,
+        audio.volume,
+        volumeRef.current,
+        FADE_MS,
+        () => isCancelled(token),
+      )
+    } catch {
+      playingRef.current = false
     }
-  }, [fadeInAndResume, fadeOutAndPause])
+  }, [ensureTrackLoaded])
 
   const syncPlaybackRef = useRef(syncPlayback)
   syncPlaybackRef.current = syncPlayback
@@ -554,10 +498,6 @@ export const PresenterMusicProvider = ({ children }: { children: ReactNode }) =>
   const skipTrack = useCallback(() => {
     void controlsRef.current.skipTrack()
   }, [])
-
-  useEvent(EVENTS.GAME.MUSIC_SKIP, () => {
-    void controlsRef.current.skipTrack()
-  })
 
   const togglePause = useCallback(() => {
     void controlsRef.current.togglePause()

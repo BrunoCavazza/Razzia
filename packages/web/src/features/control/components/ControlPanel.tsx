@@ -16,7 +16,6 @@ import {
 import type { Status as GameStatus } from "@razzia/web/features/game/utils/createStatus"
 import type { StatusDataMap } from "@razzia/common/types/game/status"
 import clsx from "clsx"
-import { SkipForward } from "lucide-react"
 import { useCallback, useEffect, useState } from "react"
 import toast from "react-hot-toast"
 import { useTranslation } from "react-i18next"
@@ -120,10 +119,6 @@ const ControlPanel = ({ controlToken }: Props) => {
     socket.emit(MANAGER_SKIP_EVENTS[status.name], { gameId })
   }
 
-  const handleSkipMusic = () => {
-    socket.emit(EVENTS.CONTROL.SKIP_MUSIC)
-  }
-
   useEffect(() => {
     setIsDisabled(false)
   }, [status?.name])
@@ -209,15 +204,6 @@ const ControlPanel = ({ controlToken }: Props) => {
             </ol>
           </section>
         )}
-
-        <button
-          type="button"
-          onClick={handleSkipMusic}
-          className="flex shrink-0 items-center justify-center gap-2 self-center rounded-xl bg-white/10 px-5 py-3 text-sm font-semibold backdrop-blur-sm transition hover:bg-white/20"
-        >
-          <SkipForward className="size-5" aria-hidden />
-          {t("game:music.skip")}
-        </button>
       </div>
 
       <footer className="mt-4 shrink-0 pt-2">
