@@ -32,6 +32,46 @@ const CONTROL_STATUS_LABELS: Partial<Record<Status, string>> = {
   [STATUS.WAIT]: "game:control.status.wait",
 }
 
+const LEADERBOARD_STORAGE_PREFIX = "razzia-control-leaderboard-"
+
+const mergeLeaderboard = (
+  previous: Player[],
+  incoming: Player[],
+): Player[] => {
+  const byClient = new Map<string, Player>()
+
+  // Keep previously seen players who already scored, so anyone who leaves
+  // after the game is over doesn't disappear from the records.
+  for (const player of previous) {
+    if (player.points > 0) {
+      byClient.set(player.clientId, player)
+    }
+  }
+
+  // Overlay the latest data for the players currently reported by the server.
+  for (const player of incoming) {
+    byClient.set(player.clientId, player)
+  }
+
+  return [...byClient.values()].sort((a, b) => b.points - a.points)
+}
+
+const loadStoredLeaderboard = (gameId: string): Player[] => {
+  try {
+    const raw = localStorage.getItem(`${LEADERBOARD_STORAGE_PREFIX}${gameId}`)
+
+    if (!raw) {
+      return []
+    }
+
+    const parsed = JSON.parse(raw) as Player[]
+
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
 interface Props {
   controlToken: string
 }
@@ -66,7 +106,9 @@ const ControlPanel = ({ controlToken }: Props) => {
     setGameId(data.gameId)
     setStatus({ name: data.status.name, data: data.status.data })
     setTotalPlayers(data.totalPlayers)
-    setLeaderboard(data.leaderboard)
+    setLeaderboard(
+      mergeLeaderboard(loadStoredLeaderboard(data.gameId), data.leaderboard),
+    )
 
     if (data.currentQuestion.total) {
       setQuestionLabel(
@@ -93,7 +135,7 @@ const ControlPanel = ({ controlToken }: Props) => {
   })
 
   useEvent(EVENTS.GAME.LEADERBOARD, ({ leaderboard: nextLeaderboard }) => {
-    setLeaderboard(nextLeaderboard)
+    setLeaderboard((prev) => mergeLeaderboard(prev, nextLeaderboard))
   })
 
   useEvent(EVENTS.GAME.ERROR_MESSAGE, (message) => {
@@ -122,6 +164,21 @@ const ControlPanel = ({ controlToken }: Props) => {
   useEffect(() => {
     setIsDisabled(false)
   }, [status?.name])
+
+  useEffect(() => {
+    if (!gameId || leaderboard.length === 0) {
+      return
+    }
+
+    try {
+      localStorage.setItem(
+        `${LEADERBOARD_STORAGE_PREFIX}${gameId}`,
+        JSON.stringify(leaderboard),
+      )
+    } catch {
+      // Ignore quota / private-mode storage errors.
+    }
+  }, [gameId, leaderboard])
 
   const actionLabel =
     status && isKeyOf(MANAGER_SKIP_BTN, status.name)
@@ -156,7 +213,7 @@ const ControlPanel = ({ controlToken }: Props) => {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col p-4 pb-6 text-white">
+    <div className="flex h-dvh flex-col p-4 pb-6 text-white">
       <header className="mb-4 shrink-0 text-center">
         <p className="text-sm font-semibold tracking-wide text-violet-300 uppercase">
           {t("game:control.title")}
